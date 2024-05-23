@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Remote Debug",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_viziumhd.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}", 
+            "pythonPath": "/data/kanferg/conda/envs/squidpy/bin/python3",
+            "justMyCode": false  
+        }
+    ]
+}

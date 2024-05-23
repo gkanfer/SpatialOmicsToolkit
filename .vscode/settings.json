@@ -1,0 +1,17 @@
+{
+    "python.pythonPath": "/data/kanferg/conda/envs/squidpy/bin/python3",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/scripts",
+        "${workspaceFolder}/utils"
+    ],
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        ".",
+        "-p",
+        "*.py"
+    ],
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false
+}
