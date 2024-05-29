@@ -1,4 +1,4 @@
-from utils.viziumHD import viziumHD
+from vizium.viziumHD import viziumHD
 import os
 import scanpy as sc
 import squidpy as sq
