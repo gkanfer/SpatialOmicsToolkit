@@ -93,7 +93,10 @@ class viziumHD:
         for arg in filter_args:
             if arg in kwargs:
                 sc.pp.filter_cells(self.andata, **{arg: kwargs[arg]})
-        #sc.pp.filter_genes(self.andata,**kwargs)
+        ## filter Doublet
+        # sc.pp.scrublet(adata, batch_key="sample")
+        # sc.pp.filter_genes(self.andata,**kwargs)
+        # need to learn how to remove this Doublet
         print("normalize total")
         sc.pp.normalize_total(self.andata)
         print("log transform")
