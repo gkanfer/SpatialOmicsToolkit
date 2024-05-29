@@ -11,7 +11,7 @@ import numpy as np
 
 
 class addQCplots(viziumHD):
-    def __init__(self, qc_add,qcFilePrefixAddQCreport, marker="Mt-", n_top_genes=2000, *args, **kwargs):
+    def __init__(self, qc_add, qcFilePrefixAddQCreport, marker="Mt-", n_top_genes=2000, *args, **kwargs):
         '''
         This class extends viziumHD and provides methods to perform quality control analysis and generate additional QC plots.
         
@@ -27,7 +27,7 @@ class addQCplots(viziumHD):
         self.qc_add = qc_add
         self.marker = marker
         self.n_top_genes = n_top_genes
-        self.qcFilePrefixAddQCreport = self.qcFilePrefixAddQCreport
+        self.qcFilePrefixAddQCreport = qcFilePrefixAddQCreport
         super().__init__(*args, **kwargs)
 
     def qc_metrics(self):
@@ -48,11 +48,7 @@ class addQCplots(viziumHD):
         sc.pl.pca_variance_ratio(self.andata, n_pcs=50, log=True)
     
     def add_additional_qc_plots(self):
-        qc_file = os.path.join(self.outPath, f'{self.qcFilePrefix}.pdf')
-        if not os.path.exists(qc_file):
-            self.qcReport()
-
-        with PdfPages(qc_file) as pdf:
+        with PdfPages(os.path.join(self.outPath, f'{self.qcFilePrefixAddQCreport}.pdf')) as pdf:
             plt.rcParams['figure.dpi'] = 150
             plt.rcParams['font.family'] = ['serif']
             plt.rcParams['font.size'] = 12
@@ -61,9 +57,9 @@ class addQCplots(viziumHD):
             plt.rcParams['xtick.labelsize'] = 12
             plt.rcParams['ytick.labelsize'] = 12
 
-            for plot_func in self.qc_add:
-                if hasattr(self, plot_func):
-                    fig = plt.figure()
-                    getattr(self, plot_func)()
-                    pdf.savefig(fig)
-                    plt.close(fig)
+            if "qc_metrics" in self.qc_add:
+                fig = plt.figure(figsize=(20, 5))
+                self.qc_metrics()
+                pdf.savefig(fig)
+                plt.close(fig)
+            
