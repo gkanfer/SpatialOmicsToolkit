@@ -102,8 +102,8 @@ class viziumHD:
         print("log transform")
         sc.pp.log1p(self.andata)
         # does not working well with h5
-        # print("scale")
-        # sc.pp.scale(self.andata)
+        print("scale")
+        sc.pp.scale(self.andata)
         return self   
     
     def embed_and_cluster_transcriptional_similarity(self):
