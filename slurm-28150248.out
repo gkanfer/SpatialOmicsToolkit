@@ -1,0 +1,10 @@
+[-] Unloading singularity  4.0.1  on cn1101 
+[-] Unloading rapids-singlecell  0.10.4 
+[+] Loading singularity  4.0.1  on cn1101 
+[+] Loading rapids-singlecell  0.10.4 
+/opt/conda/lib/python3.11/site-packages/anndata/_core/anndata.py:1820: UserWarning: Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+  utils.warn_names_duplicates("var")
+/opt/conda/lib/python3.11/site-packages/anndata/_core/anndata.py:1820: UserWarning: Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+  utils.warn_names_duplicates("var")
+/opt/conda/lib/python3.11/site-packages/scanpy/readwrite.py:476: DtypeWarning: Columns (1,2,3,4,5) have mixed types. Specify dtype option on import or set low_memory=False.
+  positions = pd.read_csv(

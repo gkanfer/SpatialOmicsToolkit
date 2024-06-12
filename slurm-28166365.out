@@ -1,0 +1,9 @@
+[-] Unloading singularity  4.0.1  on cn4425 
+[-] Unloading rapids-singlecell  0.10.4 
+[+] Loading singularity  4.0.1  on cn4425 
+[+] Loading rapids-singlecell  0.10.4 
+/opt/conda/lib/python3.11/site-packages/anndata/_core/anndata.py:1820: UserWarning: Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+  utils.warn_names_duplicates("var")
+/opt/conda/lib/python3.11/site-packages/anndata/_core/anndata.py:1820: UserWarning: Variable names are not unique. To make them unique, call `.var_names_make_unique`.
+  utils.warn_names_duplicates("var")
+/usr/local/apps/rapids-singlecell/0.10.4/bin/python3: line 10: 1062761 Killed                  singularity exec --nv ${dir}/libexec/rsc.sif $cmd "$@"
