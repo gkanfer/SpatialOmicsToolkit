@@ -54,19 +54,3 @@ sc.tl.leiden(andata016, key_added=f'clusters', flavor="igraph", directed=False, 
 sc.tl.rank_genes_groups(
     andata016, groupby="clusters", method="wilcoxon", key_added="dea_clusters"
 )
-
-
- with PdfPages(os.path.join(pathout, f'dotplot_16um.pdf')) as pdf:
-    plt.rcParams['figure.dpi'] = 150
-    plt.rcParams['font.family'] = ['serif']
-    plt.rcParams['font.size'] = 12
-    plt.rcParams['axes.labelsize'] = 12
-    plt.rcParams['axes.titlesize'] = 12
-    plt.rcParams['xtick.labelsize'] = 12
-    plt.rcParams['ytick.labelsize'] = 12
-    sc.pl.rank_genes_groups_dotplot(
-        andata016, groupby="clusters", standard_scale="var", n_genes=2, key="dea_clusters"
-    )
-    fig.tight_layout()
-    pdf.savefig()
-    plt.close()

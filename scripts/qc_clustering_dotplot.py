@@ -79,4 +79,7 @@ with PdfPages(os.path.join(pathout, f'dotplot_16um.pdf')) as pdf:
     pdf.savefig(fig)
     plt.close()
 
+for column in andata016.obs.columns:
+    if andata016.obs[column].dtype == 'object':
+        andata016.obs[column] = andata016.obs[column].astype(str)
 andata016.write(os.path.join(pathout, 'example_file.h5ad'))    

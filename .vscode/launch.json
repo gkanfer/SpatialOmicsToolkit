@@ -5,7 +5,7 @@
             "name": "Python: Remote Debug",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/draft.py",
+            "program": "${workspaceFolder}/scripts/enrichment_analysis.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}", 
             "pythonPath": "/data/kanferg/conda/envs/squidpy/bin/python3",
