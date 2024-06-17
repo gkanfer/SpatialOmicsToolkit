@@ -1,4 +1,15 @@
 from utils.vizium.viziumHD import viziumHD
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.colors import ListedColormap
+import matplotlib.ticker as ticker
+import seaborn as sns
+import os
+import gzip
+import numpy as np
+import scanpy as sc
+import squidpy as sq
 
 class applyqc(viziumHD):
     '''
@@ -24,14 +35,8 @@ class applyqc(viziumHD):
         Threshold for filtering out cells based on the number of genes detected below this threshold. Default is 4000.
     bins_gene_plot_thr : int, optional
         Number of bins to use for the histogram of the number of genes by counts with a threshold. Default is 60.
-    qcFilePrefix : str, optional
-        Prefix for the QC report file. Default is an empty string.
-    qc : bool, optional
-        Flag to indicate whether QC should be performed. Default is True.
     '''
-    def __init__(self,min_counts=50,min_genes = 80,rmvCellth = 50, mitoTh = 20, totalThr=10000, bins_total=40, bins_gene_plot=60, geneThr=4000,
-                 bins_gene_plot_thr=60, qcFilePrefix="" ,mitoPlotPrefix = "",pcaPlotPrefix = "" ,n_comps = 50,qc=True, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self,min_counts=50,min_genes = 80,rmvCellth = 50, mitoTh = 20, totalThr=10000, bins_total=40, bins_gene_plot=60, geneThr=4000,bins_gene_plot_thr=60, n_comps = 50, *args, **kwargs):
         self.min_counts = min_counts
         self.min_genes = min_genes
         self.rmvCellth = rmvCellth
@@ -41,14 +46,9 @@ class applyqc(viziumHD):
         self.bins_gene_plot = bins_gene_plot
         self.geneThr = geneThr
         self.bins_gene_plot_thr = bins_gene_plot_thr
-        self.qcFilePrefix = qcFilePrefix
-        self.mitoPlotPrefix = mitoPlotPrefix
-        self.pcaPlotPrefix = pcaPlotPrefix
         self.n_comps = n_comps
-        self.qc = qc
-        if self.qc:
-            self.apply_qc()
-        
+        super().__init__(*args, **kwargs)
+        self.apply_qc()
         
     def calcQCmat(self):
         '''
@@ -70,12 +70,12 @@ class applyqc(viziumHD):
         '''
         Apply quality control to the AnnData object.
         '''
-        self.andata = self.calcQCmat(self.andata)
+        self.calcQCmat()
         sc.pp.filter_cells(self.andata, min_counts=self.min_counts)
         sc.pp.filter_cells(self.andata, min_genes=self.min_genes)
         self.andata = self.andata[:, self.andata.var.n_cells_by_counts > self.rmvCellth]
         self.andata = self.andata[self.andata.obs["pct_counts_mt"] < self.mitoTh]
-        self.qc_report()
+        
 
     def qc_report(self):
         '''
@@ -83,7 +83,7 @@ class applyqc(viziumHD):
         '''
         sc.pp.calculate_qc_metrics(self.andata, inplace=True)
         print("Starting QC report")
-        with PdfPages(os.path.join(self.outPath, f'Quality_Control_{self.qcFilePrefix}.pdf')) as pdf:
+        with PdfPages(os.path.join(self.outPath, f'Quality_Control_{self.FilePrefix}.pdf')) as pdf:
             plt.rcParams['figure.dpi'] = 150
             plt.rcParams['font.family'] = ['serif']
             plt.rcParams['font.size'] = 12
@@ -130,12 +130,10 @@ class applyqc(viziumHD):
             fig.tight_layout()
             pdf.savefig()
             plt.close()
+        return
 
     def plot_mitochondrial_data(self):
-        '''
-        Plot mitochondrial data for the AnnData object.
-        '''
-        with PdfPages(os.path.join(self.outPath, f'Quality_Control_mito{self.mitoPlotPrefix}.pdf')) as pdf:
+        with PdfPages(os.path.join(self.outPath, f'Quality_Control_mito{self.FilePrefix}.pdf')) as pdf:
             plt.rcParams['figure.dpi'] = 150
             plt.rcParams['font.family'] = ['serif']
             plt.rcParams['font.size'] = 12
@@ -144,13 +142,17 @@ class applyqc(viziumHD):
             plt.rcParams['xtick.labelsize'] = 12
             plt.rcParams['ytick.labelsize'] = 12
             sc.pp.calculate_qc_metrics(self.andata, qc_vars=["mt", "ribo", "hb"], inplace=True, log1p=True)
-            sns.jointplot(data=self.andata.obs, x="log1p_total_counts", y="log1p_n_genes_by_counts", kind="hex")
+            fig, axes = plt.subplots(1, 1,figsize=(4, 3))
+            sns.violinplot(y = self.andata.obs['pct_counts_mt'], linewidth=1, linecolor="k" ,fill=False)
             pdf.savefig()
             plt.close()
+        return
             
     def perform_pca_and_save_plot(self):
-        sc.tl.pca(self.andata, n_comps=n_comps, use_highly_variable=True)
-        with PdfPages(os.path.join(self.outPath, f'Quality_Control_pca{self.pcaPlotPrefix }.pdf')) as pdf:
+        sc.tl.pca(self.andata,n_comps = self.n_comps)
+        pca = self.andata.uns['pca']
+        explained_variance_ratio = np.log(pca['variance_ratio'])       
+        with PdfPages(os.path.join(self.outPath, f'Quality_Control_pca{self.FilePrefix }.pdf')) as pdf:
             plt.rcParams['figure.dpi'] = 150
             plt.rcParams['font.family'] = ['serif']
             plt.rcParams['font.size'] = 12
@@ -178,6 +180,7 @@ class applyqc(viziumHD):
             
             pdf.savefig()
             plt.close()
+        return
 
             
             

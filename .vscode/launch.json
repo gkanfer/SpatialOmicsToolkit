@@ -2,14 +2,14 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Remote Debug",
-            "type": "python",
+            "name": "Python: Current File",
+            "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/scripts/enrichment_analysis.py",
+            "program": "${workspaceFolder}/draft.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}", 
-            "pythonPath": "/data/kanferg/conda/envs/squidpy/bin/python3",
-            "justMyCode": false  
+            "python": "/data/kanferg/conda/envs/squidpy/bin/python3",
+            "justMyCode": false,
         }
     ]
 }

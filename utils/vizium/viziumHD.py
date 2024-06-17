@@ -21,9 +21,10 @@ class viziumHD:
     outPath : str
         The output directory path where the results, including the quality control report, will be saved.
     '''
-    def __init__(self, path, outPath):
+    def __init__(self, path, outPath, FilePrefix):
         self.path = path
         self.outPath = outPath
+        self.FilePrefix = FilePrefix
         self.parquet_to_csv()
         self.andata = self.readVizHD()
         plt.rcParams['figure.dpi'] = 150
