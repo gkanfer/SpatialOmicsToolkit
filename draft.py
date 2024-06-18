@@ -7,7 +7,8 @@ from utils.vizium.analysis.SpataStatReport import SpataStatReport
 def run(path,pathout,FilePrefix):
     # report spatial statics
     SpatRep = SpataStatReport(path = path,outPath = pathout,FilePrefix = FilePrefix)
-    SpatRep.report_rank_genes_groups()
+    # SpatRep.report_rank_genes_groups()
+    SpatRep.plot_spatial()
     SpatRep.plot_nhood_enrichment()
     SpatRep.plot_spatial_clasterList()
     SpatRep.plot_co_occurrence()

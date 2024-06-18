@@ -71,6 +71,7 @@ class applyqc(viziumHD):
         Apply quality control to the AnnData object.
         '''
         self.calcQCmat()
+        self.andata.obsm['spatial'] = np.array(self.andata.obsm['spatial'], dtype=np.float64)
         sc.pp.filter_cells(self.andata, min_counts=self.min_counts)
         sc.pp.filter_cells(self.andata, min_genes=self.min_genes)
         self.andata = self.andata[:, self.andata.var.n_cells_by_counts > self.rmvCellth]
@@ -144,6 +145,8 @@ class applyqc(viziumHD):
             sc.pp.calculate_qc_metrics(self.andata, qc_vars=["mt", "ribo", "hb"], inplace=True, log1p=True)
             fig, axes = plt.subplots(1, 1,figsize=(4, 3))
             sns.violinplot(y = self.andata.obs['pct_counts_mt'], linewidth=1, linecolor="k" ,fill=False)
+            fig.tight_layout()
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()
         return
@@ -177,7 +180,8 @@ class applyqc(viziumHD):
             # Specify number of ticks on the y-axis
             ax = plt.gca()  # get current axes
             ax.yaxis.set_major_locator(ticker.MaxNLocator(10)) 
-            
+            fig.tight_layout()
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()
         return

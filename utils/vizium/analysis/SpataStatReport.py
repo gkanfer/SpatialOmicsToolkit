@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import ListedColormap
+from matplotlib.colors import LinearSegmentedColormap
 import seaborn as sns
 import os
 import gzip
@@ -24,6 +25,7 @@ class SpataStatReport(SpatialStatsSQ):
         print("Starting Genes Ranking report")
         with PdfPages(os.path.join(self.outPath, f'Report_dotplotGeneGroups_{self.FilePrefix}.pdf')) as pdf:
             sc.pl.rank_genes_groups_dotplot(self.andata, groupby="clusters", standard_scale="var", n_genes=self.n_genes_rank, key="dea_clusters")
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()
     
@@ -41,15 +43,32 @@ class SpataStatReport(SpatialStatsSQ):
             colors = [(0, 0, 1), (1, 1, 1), (1, 0, 0)]  # Blue -> White -> Red
             custom_cmap = LinearSegmentedColormap.from_list('custom_cmap', colors, N=self.nbins_nhood)
             sq.pl.nhood_enrichment(self.andata, cluster_key="clusters", method="average", cmap=custom_cmap, vmin=-200, vmax=200, figsize=(3, 3))
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()
     
+    def plot_spatial(self):
+        print("Report spatial map")
+        palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
+        listed_cmap = ListedColormap(palette)
+        with PdfPages(os.path.join(self.outPath, f'Report_spatial_map_plot_{self.FilePrefix}.pdf')) as pdf:
+            fig, ax = plt.subplots(1, 1, figsize=(4, 3))
+            sq.pl.spatial_scatter(self.andata, color="clusters", img=False, ax=ax, palette=listed_cmap)
+            fig.tight_layout()
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
+            pdf.savefig()
+            plt.close()
+        
+    
     def plot_spatial_clasterList(self):
         print("Report spatial gene map")
-        listed_cmap = ListedColormap([self.sel_clusters])
+        palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
+        listed_cmap = ListedColormap([clust for clust in range(len(self.sel_clusters))])
         with PdfPages(os.path.join(self.outPath, f'Report_selectCluster_spatial_plot_{self.FilePrefix}.pdf')) as pdf:
             fig, ax = plt.subplots(1, 1, figsize=(4, 3))
-            sq.pl.spatial_scatter(andata016, groups=sel_cluters, color="clusters",img=False, ax=ax, palette=listed_cmap)
+            sq.pl.spatial_scatter(self.andata, groups=self.sel_clusters, color="clusters", img=False, ax=ax, palette=listed_cmap)
+            fig.tight_layout()
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()
     
@@ -68,6 +87,7 @@ class SpataStatReport(SpatialStatsSQ):
         with PdfPages(os.path.join(self.outPath, f'Report__selectCluster_co_occurrence_{self.FilePrefix}.pdf')) as pdf:
             sq.pl.co_occurrence(self.andata, cluster_key="clusters", clusters=self.reff_cluster, figsize=(4, 3), palette=listed_cmap)
             plt.ylabel("co-occurrence ratio")
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()
     
@@ -88,7 +108,7 @@ class SpataStatReport(SpatialStatsSQ):
         
         # Sort the genes based on Moran's I
         autocorr = (
-            adata.uns["moranI"]["I"].sort_values(ascending=False).head(num_genes).index.tolist()
+            self.adata.uns["moranI"]["I"].sort_values(ascending=False).head(num_genes).index.tolist()
         )
         
         # Set up the plotting context
@@ -100,7 +120,7 @@ class SpataStatReport(SpatialStatsSQ):
         with PdfPages(os.path.join(self.outPath, f'Report_Spatial_autocorr_{self.FilePrefix}.pdf')) as pdf:
             for i in range(num_rows):
                 # Get the subset of genes to plot in the current row
-                genes_subset = top_autocorr[i*4 : (i+1)*4]
+                genes_subset = autocorr[i*4 : (i+1)*4]
             
             # Create the plot
             fig, axes = plt.subplots(1, len(genes_subset), figsize=(5 * len(genes_subset), 5))
@@ -109,11 +129,12 @@ class SpataStatReport(SpatialStatsSQ):
             
             for ax, gene in zip(axes, genes_subset):
                 sq.pl.spatial_scatter(
-                    adata, color=gene, size=1, cmap="Reds", img=False, ax=ax, colorbar=False
+                    self.andata, color=gene, size=1, cmap="Reds", img=False, ax=ax, colorbar=False
                 )
             
             plt.subplots_adjust(wspace=0.3)
-            
+            fig.tight_layout()
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             # Save the current figure to the PDF
             pdf.savefig(fig)
             plt.close(fig)
