@@ -13,36 +13,33 @@ import squidpy as sq
 
 
 class SpataStatReport(SpatialStatsSQ):
-    def __init__(self,n_genes_rank = 5 ,nbins_nhood = 100,sel_clusters = ['1','5'],reff_cluster = '1',num_genes_auto = 4,*args, **kwargs):
+    def __init__(self,n_genes_rank = 5 ,nbins_nhood = 100,sel_clusters = ['1','5'],reff_cluster = '1',num_genes_auto = 4, pv_cellphone = 0.001, alpha = 0.001, *args, **kwargs):
         self.n_genes_rank = n_genes_rank
         self.nbins_nhood = nbins_nhood 
         self.sel_clusters = sel_clusters
         self.reff_cluster = reff_cluster
         self.num_genes_auto = num_genes_auto
+        self.pv_cellphone = pv_cellphone
+        self.alpha = alpha
         super().__init__(*args, **kwargs)
         
     def report_rank_genes_groups(self):
         print("Starting Genes Ranking report")
         with PdfPages(os.path.join(self.outPath, f'Report_dotplotGeneGroups_{self.FilePrefix}.pdf')) as pdf:
+            self.set_image_para()
             sc.pl.rank_genes_groups_dotplot(self.andata, groupby="clusters", standard_scale="var", n_genes=self.n_genes_rank, key="dea_clusters")
             plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()
     
     def plot_nhood_enrichment(self):
-        '''
-        Plot neighborhood enrichment.
-        
-        Parameters
-        ----------
-        save_path : str, optional
-            Path to save the neighborhood enrichment plot. Default is "nhood_enrichment.pdf".
-        '''
         print("Starting neighborhood enrichment report")
         with PdfPages(os.path.join(self.outPath, f'Report__nhood_enr{self.FilePrefix}.pdf')) as pdf:
+            self.set_image_para()
             colors = [(0, 0, 1), (1, 1, 1), (1, 0, 0)]  # Blue -> White -> Red
             custom_cmap = LinearSegmentedColormap.from_list('custom_cmap', colors, N=self.nbins_nhood)
-            sq.pl.nhood_enrichment(self.andata, cluster_key="clusters", method="average", cmap=custom_cmap, vmin=-200, vmax=200, figsize=(3, 3))
+            fig, ax = plt.subplots()
+            sq.pl.nhood_enrichment(self.andata, cluster_key="clusters", method="average", cmap=custom_cmap, vmin=-200, vmax=200, ax =ax)
             plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()
@@ -52,6 +49,7 @@ class SpataStatReport(SpatialStatsSQ):
         palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
         listed_cmap = ListedColormap(palette)
         with PdfPages(os.path.join(self.outPath, f'Report_spatial_map_plot_{self.FilePrefix}.pdf')) as pdf:
+            self.set_image_para()
             fig, ax = plt.subplots(1, 1, figsize=(4, 3))
             sq.pl.spatial_scatter(self.andata, color="clusters", img=False, ax=ax, palette=listed_cmap)
             fig.tight_layout()
@@ -63,8 +61,9 @@ class SpataStatReport(SpatialStatsSQ):
     def plot_spatial_clasterList(self):
         print("Report spatial gene map")
         palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
-        listed_cmap = ListedColormap([clust for clust in range(len(self.sel_clusters))])
+        listed_cmap = ListedColormap([palette[clust] for clust in range(len(self.sel_clusters))])
         with PdfPages(os.path.join(self.outPath, f'Report_selectCluster_spatial_plot_{self.FilePrefix}.pdf')) as pdf:
+            self.set_image_para()
             fig, ax = plt.subplots(1, 1, figsize=(4, 3))
             sq.pl.spatial_scatter(self.andata, groups=self.sel_clusters, color="clusters", img=False, ax=ax, palette=listed_cmap)
             fig.tight_layout()
@@ -73,20 +72,15 @@ class SpataStatReport(SpatialStatsSQ):
             plt.close()
     
     def plot_co_occurrence(self):
-        '''
-        Plot co-occurrence.
-        
-        Parameters
-        ----------
-        save_path : str, optional
-            Path to save the co-occurrence plot. Default is "co_occurrence.pdf".
-        '''
         print("start coocurance analysis report")
         palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
         listed_cmap = ListedColormap(palette)
         with PdfPages(os.path.join(self.outPath, f'Report__selectCluster_co_occurrence_{self.FilePrefix}.pdf')) as pdf:
-            sq.pl.co_occurrence(self.andata, cluster_key="clusters", clusters=self.reff_cluster, figsize=(4, 3), palette=listed_cmap)
+            self.set_image_para()
+            fig, ax = plt.subplots(1, 1, figsize=(4, 3))
+            sq.pl.co_occurrence(self.andata, cluster_key="clusters", clusters=self.reff_cluster, palette=listed_cmap)
             plt.ylabel("co-occurrence ratio")
+            fig.tight_layout()
             plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()
@@ -94,13 +88,6 @@ class SpataStatReport(SpatialStatsSQ):
     def plot_top_autocorr(self):
         '''
         Plot top and bottom autocorrelation.
-        
-        Parameters
-        ----------
-        num_view : int, optional
-            Number of top and bottom autocorrelated genes to view. Default is 4.
-        save_path : str, optional
-            Path to save the autocorrelation plot. Default is "spatial_autocorr.pdf".
         '''
         # Ensure num_genes is within the allowed range
         print("start autocorlation report")
@@ -118,6 +105,7 @@ class SpataStatReport(SpatialStatsSQ):
         num_rows = (num_genes + 3) // 4  # Each row can have up to 4 plots
         
         with PdfPages(os.path.join(self.outPath, f'Report_Spatial_autocorr_{self.FilePrefix}.pdf')) as pdf:
+            self.set_image_para()
             for i in range(num_rows):
                 # Get the subset of genes to plot in the current row
                 genes_subset = autocorr[i*4 : (i+1)*4]
@@ -138,3 +126,17 @@ class SpataStatReport(SpatialStatsSQ):
             # Save the current figure to the PDF
             pdf.savefig(fig)
             plt.close(fig)
+            
+    def run_cellphonedb(self):
+        sq.gr.ligrec(self.andata,
+        n_perms=1000,
+        cluster_key="clusters",
+        copy=False,
+        use_raw=False,
+        transmitter_params={"categories": "ligand"},
+        receiver_params={"categories": "receptor"},)
+        print("Starting Ligand Receptor interaction analysis")
+        with PdfPages(os.path.join(self.outPath, f'Report__ligandReceptor{self.FilePrefix}.pdf')) as pdf:
+            self.set_image_para()
+            sq.pl.ligrec(self.andata, cluster_key="clusters",pvalue_threshold = 0.001,remove_empty_interactions = True, alpha = 0.001)
+            

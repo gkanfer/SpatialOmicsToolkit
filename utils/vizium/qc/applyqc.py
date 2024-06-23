@@ -36,7 +36,8 @@ class applyqc(viziumHD):
     bins_gene_plot_thr : int, optional
         Number of bins to use for the histogram of the number of genes by counts with a threshold. Default is 60.
     '''
-    def __init__(self,min_counts=50,min_genes = 80,rmvCellth = 50, mitoTh = 20, totalThr=10000, bins_total=40, bins_gene_plot=60, geneThr=4000,bins_gene_plot_thr=60, n_comps = 50, *args, **kwargs):
+    def __init__(self,mitochon = "mt-",min_counts=50,min_genes = 80,rmvCellth = 50, mitoTh = 20, totalThr=10000, bins_total=40, bins_gene_plot=60, geneThr=4000,bins_gene_plot_thr=60, n_comps = 50, *args, **kwargs):
+        self.mitochon = mitochon #Mitochondia-encoded genes (gene names start with prefix mt- or MT-)
         self.min_counts = min_counts
         self.min_genes = min_genes
         self.rmvCellth = rmvCellth
@@ -60,16 +61,17 @@ class applyqc(viziumHD):
             The AnnData object with calculated QC metrics.
         '''
         self.andata.var_names_make_unique()
-        self.andata.var["mt"] = self.andata.var_names.str.startswith("mt-")
-        self.andata.var["ribo"] = self.andata.var_names.str.startswith(("RPS", "RPL"))
-        self.andata.var["hb"] = self.andata.var_names.str.contains("^HB[^(P)]")
-        sc.pp.calculate_qc_metrics(self.andata, qc_vars=["mt", "ribo", "hb"], inplace=True, log1p=True)
+        self.andata.var["mt"] = self.andata.var_names.str.startswith(self.mitochon)
+        # self.andata.var["ribo"] = self.andata.var_names.str.startswith(("RPS", "RPL"))
+        # self.andata.var["hb"] = self.andata.var_names.str.contains("^HB[^(P)]")
+        sc.pp.calculate_qc_metrics(self.andata, qc_vars=["mt"], inplace=True, log1p=True)
         return
         
     def apply_qc(self):
         '''
         Apply quality control to the AnnData object.
         '''
+        self.andata.raw = self.andata.copy()
         self.calcQCmat()
         self.andata.obsm['spatial'] = np.array(self.andata.obsm['spatial'], dtype=np.float64)
         sc.pp.filter_cells(self.andata, min_counts=self.min_counts)
@@ -142,7 +144,6 @@ class applyqc(viziumHD):
             plt.rcParams['axes.titlesize'] = 12
             plt.rcParams['xtick.labelsize'] = 12
             plt.rcParams['ytick.labelsize'] = 12
-            sc.pp.calculate_qc_metrics(self.andata, qc_vars=["mt", "ribo", "hb"], inplace=True, log1p=True)
             fig, axes = plt.subplots(1, 1,figsize=(4, 3))
             sns.violinplot(y = self.andata.obs['pct_counts_mt'], linewidth=1, linecolor="k" ,fill=False)
             fig.tight_layout()

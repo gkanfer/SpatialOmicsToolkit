@@ -27,14 +27,6 @@ class viziumHD:
         self.FilePrefix = FilePrefix
         self.parquet_to_csv()
         self.andata = self.readVizHD()
-        plt.rcParams['figure.dpi'] = 150
-        plt.rcParams['font.family'] = ['serif']
-        plt.rcParams['font.size'] = 12
-        plt.rcParams['axes.labelsize'] = 12
-        plt.rcParams['axes.titlesize'] = 12
-        plt.rcParams['xtick.labelsize'] = 12
-        plt.rcParams['ytick.labelsize'] = 12
-        
         
     def parquet_to_csv(self):
         '''
@@ -53,6 +45,15 @@ class viziumHD:
     def printAnnD(self):
         print(f'{self.andata}')
         return self
+    
+    def set_image_para(self):
+        plt.rcParams['figure.dpi'] = 150
+        plt.rcParams['font.family'] = ['serif']
+        plt.rcParams['font.size'] = 12
+        plt.rcParams['axes.labelsize'] = 12
+        plt.rcParams['axes.titlesize'] = 12
+        plt.rcParams['xtick.labelsize'] = 12
+        plt.rcParams['ytick.labelsize'] = 12
     
     
         
