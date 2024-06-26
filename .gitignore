@@ -9,3 +9,4 @@ token.txt
 *.h5ad
 *.pdf
 *.csv
+*.pkl

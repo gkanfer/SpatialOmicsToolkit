@@ -1,11 +1,14 @@
 #!/bin/sh
 
-#SBATCH --job-name="2um"
+#SBATCH --job-name="cell2loc"
 #SBATCH --partition=gpu
+#SBATCH --time=12:00:00
 #SBATCH --gres=gpu:a100:4
+#SBATCH --cpus-per-task=6
+#SBATCH --mem=100g
 #SBATCH --mail-type=ALL
 
-module load rapids-singlecell 
+module load cell2location
 
 # Use the specific python interpreter from rapids-singlecell
-/usr/local/apps/rapids-singlecell/0.10.4/bin/python3 run_2um_rsc.py
+python run_cell2loc.py
