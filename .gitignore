@@ -10,3 +10,5 @@ token.txt
 *.pdf
 *.csv
 *.pkl
+*.out
+token.txt
