@@ -2,6 +2,7 @@ import debugpy
 import scanpy as sc
 import squidpy as sq
 import pandas as pd
+from collections import OrderedDict
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.colors import ListedColormap
@@ -54,6 +55,30 @@ class viziumHD:
         plt.rcParams['axes.titlesize'] = 12
         plt.rcParams['xtick.labelsize'] = 12
         plt.rcParams['ytick.labelsize'] = 12
+        
+    
+    @staticmethod
+    def print_all_keys(d, parent_key=''):
+        """
+        Prints all keys of a dictionary recursively.
+
+        Args:
+            d (dict): The dictionary to print keys from.
+            parent_key (str): The parent key for nested dictionaries.
+
+        Returns:
+            None
+        
+        Examples:
+            print_all_keys(self.andata.uns)
+        """
+        if isinstance(d, (dict, OrderedDict)):
+            for key, value in d.items():
+                new_key = f"{parent_key}.{key}" if parent_key else key
+                print(new_key)
+                if isinstance(value, (dict, OrderedDict)):
+                    print_all_keys(value, new_key)
+        
     
     
         

@@ -1,0 +1,57 @@
+conda-forge/linux-64                                        Using cache
+conda-forge/noarch                                          Using cache
+Transaction
+
+  Prefix: /gpfs/gsfs10/users/kanferg/conda/envs/squidpy-voyagerpy
+
+  Updating specs:
+
+   - pandas
+   - ca-certificates
+   - openssl
+
+
+  Package            Version  Build                Channel           Size
+───────────────────────────────────────────────────────────────────────────
+  Install:
+───────────────────────────────────────────────────────────────────────────
+
+  + libstdcxx-ng      14.1.0  hc0a3c3a_0           conda-forge     Cached
+  + python_abi          3.10  4_cp310              conda-forge     Cached
+  + libgfortran5      14.1.0  hc5f4f2c_0           conda-forge     Cached
+  + libgfortran-ng    14.1.0  h69a702a_0           conda-forge     Cached
+  + libopenblas       0.3.27  pthreads_hac2b453_1  conda-forge     Cached
+  + libblas            3.9.0  22_linux64_openblas  conda-forge     Cached
+  + libcblas           3.9.0  22_linux64_openblas  conda-forge     Cached
+  + liblapack          3.9.0  22_linux64_openblas  conda-forge     Cached
+  + numpy              2.0.0  py310h515e003_0      conda-forge        8MB
+  + python-tzdata     2024.1  pyhd8ed1ab_0         conda-forge     Cached
+  + pytz              2024.1  pyhd8ed1ab_0         conda-forge     Cached
+  + six               1.16.0  pyh6c4a22f_0         conda-forge     Cached
+  + python-dateutil    2.9.0  pyhd8ed1ab_0         conda-forge     Cached
+  + pandas             2.2.2  py310hf9f9076_1      conda-forge     Cached
+
+  Upgrade:
+───────────────────────────────────────────────────────────────────────────
+
+  - openssl            3.1.6  h4ab18f5_0           conda-forge     Cached
+  + openssl            3.3.1  h4ab18f5_1           conda-forge     Cached
+
+  Summary:
+
+  Install: 14 packages
+  Upgrade: 1 packages
+
+  Total download: 8MB
+
+───────────────────────────────────────────────────────────────────────────
+
+
+Confirm changes: [Y/n] 
+Looking for: ['pandas']
+
+
+Pinned packages:
+  - python 3.10.*
+
+

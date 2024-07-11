@@ -10,6 +10,7 @@ import gzip
 import numpy as np
 import scanpy as sc
 import squidpy as sq
+import voyagerpy as vp
 
 class applyqc(viziumHD):
     '''
@@ -35,8 +36,12 @@ class applyqc(viziumHD):
         Threshold for filtering out cells based on the number of genes detected below this threshold. Default is 4000.
     bins_gene_plot_thr : int, optional
         Number of bins to use for the histogram of the number of genes by counts with a threshold. Default is 60.
+    voygerpyRead : bool, optional
+        Whether to read data using voygerpy. Default is False.
+    dataset_key : str, optional
+        Key or identifier for the dataset. Default is "Visium_HD_Mouse_Brain".
     '''
-    def __init__(self,mitochon = "mt-",min_counts=50,min_genes = 80,rmvCellth = 50, mitoTh = 20, totalThr=10000, bins_total=40, bins_gene_plot=60, geneThr=4000,bins_gene_plot_thr=60, n_comps = 50, *args, **kwargs):
+    def __init__(self,mitochon = "mt-",min_counts=50,min_genes = 80,rmvCellth = 50, mitoTh = 20, totalThr=10000, bins_total=40, bins_gene_plot=60, geneThr=4000,bins_gene_plot_thr=60, n_comps = 50,voygerpyRead = False, dataset_key = "Visium_HD_Mouse_Brain", n_neighbors = 80, random_state = 34566, *args, **kwargs):
         self.mitochon = mitochon #Mitochondia-encoded genes (gene names start with prefix mt- or MT-)
         self.min_counts = min_counts
         self.min_genes = min_genes
@@ -48,8 +53,14 @@ class applyqc(viziumHD):
         self.geneThr = geneThr
         self.bins_gene_plot_thr = bins_gene_plot_thr
         self.n_comps = n_comps
+        self.voygerpyRead = voygerpyRead
+        self.dataset_key = dataset_key
+        self.n_neighbors = n_neighbors
+        self.random_state = random_state
         super().__init__(*args, **kwargs)
         self.apply_qc()
+        if self.voygerpyRead:
+            self.prepare_andata_for_voyagerpy()    
         
     def calcQCmat(self):
         '''
@@ -78,8 +89,23 @@ class applyqc(viziumHD):
         sc.pp.filter_cells(self.andata, min_genes=self.min_genes)
         self.andata = self.andata[:, self.andata.var.n_cells_by_counts > self.rmvCellth]
         self.andata = self.andata[self.andata.obs["pct_counts_mt"] < self.mitoTh]
-        
+        return
 
+    def prepare_andata_for_voyagerpy(self):
+        '''
+        Prepares the AnnData object for voyagerpy by modifying its spatial data.
+
+        Returns:
+            None
+        '''
+        self.andata.var_names_make_unique()
+        self.andata.obsm['spatial'] = np.array(self.andata.obsm['spatial'], dtype=np.float64)
+        self.andata.uns['spatial']['img'] = self.andata.uns['spatial'][self.dataset_key].pop("images")
+        self.andata.uns['spatial']['scale'] = self.andata.uns['spatial'][self.dataset_key].pop("scalefactors")
+        self.andata.uns['spatial']['metadata'] = self.andata.uns['spatial'][self.dataset_key].pop("metadata")
+        self.andata.uns['spatial'].pop(self.dataset_key)
+        return
+    
     def qc_report(self):
         '''
         Generate a QC report and save it as a PDF.

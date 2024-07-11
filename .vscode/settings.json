@@ -1,5 +1,6 @@
 {
-    "python.pythonPath": "/data/kanferg/conda/envs/squidpy/bin/python3",
+    "files.autoSave": "onWindowChange",
+    // "python.pythonPath": "/data/kanferg/conda/envs/squidpy/bin/python3",
     "python.analysis.extraPaths": [
         "${workspaceFolder}/scripts",
         "${workspaceFolder}/utils"
@@ -13,5 +14,6 @@
     ],
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
-    "python.testing.nosetestsEnabled": false
+    "python.testing.nosetestsEnabled": false,
+    "workbench.editor.enablePreview": false
 }
