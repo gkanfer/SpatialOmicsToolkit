@@ -8,7 +8,7 @@
             "program": "${workspaceFolder}/draft.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}", 
-            "python": "/data/kanferg/conda/envs/squidpy/bin/python3",
+            "python": "/data/kanferg/conda/envs/squidpy-voyagerpy/bin/python3",
             "justMyCode": false,
         }
     ]

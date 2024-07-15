@@ -1,4 +1,4 @@
-from utils.vizium.analysis.SpatialStatsSQ import SpataStatReport
+from utils.vizium.analysis.SpataStatReport import SpataStatReport
 
 def run(path,pathout,FilePrefix,voygerpyRead):
     # report spatial analysis vg
@@ -18,6 +18,3 @@ if __name__ == "__main__":
     pathout = "/data/kanferg/Sptial_Omics/SpatialOmicsToolkit/out_2"
     FilePrefix = "_071124" 
     run(path = path, pathout = pathout, FilePrefix = FilePrefix, voygerpyRead = True)
-    
-    
-    

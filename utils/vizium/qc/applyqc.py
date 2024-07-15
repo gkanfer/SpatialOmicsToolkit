@@ -18,10 +18,14 @@ class applyqc(viziumHD):
     
     Parameters
     ----------
-    min_counts : int, optional
-        Minimum counts for filtering cells. Default is 50.
-    min_genes : int, optional
-        Minimum genes for filtering cells. Default is 80.
+    min_counts : int
+        Minimum counts for filtering cells. Default is 50. 0-inf
+    min_genes : int
+        Minimum genes for filtering cells. Default is 80. 0-inf
+    min_gene_count : int
+        Minimum genes for filtering genes. Default is 0. 0-inf
+    max_gene_count : int
+        Maximum genes for filtering genes. Default is 0. 0-inf
     rmvCellth : int, optional
         Threshold for removing cells based on the number of cells by counts. Default is 50.
     mitoTh : int, optional
@@ -41,10 +45,12 @@ class applyqc(viziumHD):
     dataset_key : str, optional
         Key or identifier for the dataset. Default is "Visium_HD_Mouse_Brain".
     '''
-    def __init__(self,mitochon = "mt-",min_counts=50,min_genes = 80,rmvCellth = 50, mitoTh = 20, totalThr=10000, bins_total=40, bins_gene_plot=60, geneThr=4000,bins_gene_plot_thr=60, n_comps = 50,voygerpyRead = False, dataset_key = "Visium_HD_Mouse_Brain", n_neighbors = 80, random_state = 34566, *args, **kwargs):
+    def __init__(self,mitochon = "mt-", min_counts=50,min_genes = 80,min_gene_count = 0,max_gene_count = 0, rmvCellth = 50, mitoTh = 20, totalThr=10000, bins_total=40, bins_gene_plot=60, geneThr=4000,bins_gene_plot_thr=60, n_comps = 50,voygerpyRead = False, dataset_key = "Visium_HD_Mouse_Brain", n_neighbors = 80, random_state = 34566, *args, **kwargs):
         self.mitochon = mitochon #Mitochondia-encoded genes (gene names start with prefix mt- or MT-)
         self.min_counts = min_counts
         self.min_genes = min_genes
+        self.min_gene_count = min_gene_count
+        self.max_gene_count = max_gene_count
         self.rmvCellth = rmvCellth
         self.mitoTh = mitoTh
         self.totalThr = totalThr
@@ -58,9 +64,10 @@ class applyqc(viziumHD):
         self.n_neighbors = n_neighbors
         self.random_state = random_state
         super().__init__(*args, **kwargs)
-        self.apply_qc()
         if self.voygerpyRead:
-            self.prepare_andata_for_voyagerpy()    
+            self.prepare_andata_for_voyagerpy()
+        else:
+            self.apply_qc()    
         
     def calcQCmat(self):
         '''
@@ -99,11 +106,21 @@ class applyqc(viziumHD):
             None
         '''
         self.andata.var_names_make_unique()
+        if self.min_counts > 0:
+            sc.pp.filter_cells(self.andata, min_counts=self.min_counts)
+        if self.min_genes > 0:
+            sc.pp.filter_cells(self.andata, min_genes=self.min_genes)
+        if self.min_gene_count > 0:
+            sc.pp.filter_genes(self.andata, min_counts=self.min_gene_count)
+        if self.max_gene_count > 0:
+            sc.pp.filter_genes(self.andata, max_counts=self.max_gene_count)
         self.andata.obsm['spatial'] = np.array(self.andata.obsm['spatial'], dtype=np.float64)
         self.andata.uns['spatial']['img'] = self.andata.uns['spatial'][self.dataset_key].pop("images")
         self.andata.uns['spatial']['scale'] = self.andata.uns['spatial'][self.dataset_key].pop("scalefactors")
         self.andata.uns['spatial']['metadata'] = self.andata.uns['spatial'][self.dataset_key].pop("metadata")
         self.andata.uns['spatial'].pop(self.dataset_key)
+        is_mt = self.andata.var_names.str.startswith('mt')
+        vp.utils.add_per_cell_qcmetrics(self.andata, subsets={'mito': is_mt})
         return
     
     def qc_report(self):
@@ -113,13 +130,7 @@ class applyqc(viziumHD):
         sc.pp.calculate_qc_metrics(self.andata, inplace=True)
         print("Starting QC report")
         with PdfPages(os.path.join(self.outPath, f'Quality_Control_{self.FilePrefix}.pdf')) as pdf:
-            plt.rcParams['figure.dpi'] = 150
-            plt.rcParams['font.family'] = ['serif']
-            plt.rcParams['font.size'] = 12
-            plt.rcParams['axes.labelsize'] = 12
-            plt.rcParams['axes.titlesize'] = 12
-            plt.rcParams['xtick.labelsize'] = 12
-            plt.rcParams['ytick.labelsize'] = 12
+            self.set_image_para()
             fig, axs = plt.subplots(2, 2, figsize=(8, 8))
             axs = axs.ravel()
             # Plot for total counts
@@ -163,13 +174,7 @@ class applyqc(viziumHD):
 
     def plot_mitochondrial_data(self):
         with PdfPages(os.path.join(self.outPath, f'Quality_Control_mito{self.FilePrefix}.pdf')) as pdf:
-            plt.rcParams['figure.dpi'] = 150
-            plt.rcParams['font.family'] = ['serif']
-            plt.rcParams['font.size'] = 12
-            plt.rcParams['axes.labelsize'] = 12
-            plt.rcParams['axes.titlesize'] = 12
-            plt.rcParams['xtick.labelsize'] = 12
-            plt.rcParams['ytick.labelsize'] = 12
+            self.set_image_para()
             fig, axes = plt.subplots(1, 1,figsize=(4, 3))
             sns.violinplot(y = self.andata.obs['pct_counts_mt'], linewidth=1, linecolor="k" ,fill=False)
             fig.tight_layout()
@@ -183,13 +188,7 @@ class applyqc(viziumHD):
         pca = self.andata.uns['pca']
         explained_variance_ratio = np.log(pca['variance_ratio'])       
         with PdfPages(os.path.join(self.outPath, f'Quality_Control_pca{self.FilePrefix }.pdf')) as pdf:
-            plt.rcParams['figure.dpi'] = 150
-            plt.rcParams['font.family'] = ['serif']
-            plt.rcParams['font.size'] = 12
-            plt.rcParams['axes.labelsize'] = 12
-            plt.rcParams['axes.titlesize'] = 12
-            plt.rcParams['xtick.labelsize'] = 12
-            plt.rcParams['ytick.labelsize'] = 12
+            self.set_image_para()
             plt.figure(figsize=(4, 3))
             n_pcs = 50
 
@@ -213,6 +212,20 @@ class applyqc(viziumHD):
             plt.close()
         return
 
-            
-            
+
+# def dispersion_plot(self):
+#     with PdfPages(os.path.join(self.outPath, f'Quality_Control_dispersion_plot{self.FilePrefix}.pdf')) as pdf:
+#         var = np.var(self.andata.X.todense(), axis=0) #Gene wise
+#         gene_count = self.andata.var['n_counts'].values
+#         self.set_image_para()
+#         fig, axes = plt.subplots(1, 1,figsize=(4, 3))
+#         sns.violinplot(y = self.andata.obs['pct_counts_mt'], linewidth=1, linecolor="k" ,fill=False)
+#         fig.tight_layout()
+#         plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
+#         pdf.savefig()
+#         plt.close()
+#     return
+
+#from Voyger py
+        
             

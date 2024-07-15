@@ -13,6 +13,7 @@ import squidpy as sq
 import voyagerpy as vp
 
 
+
 class SpataStatReport(SpatialStatsSQ):
     def __init__(self,n_genes_rank = 5 ,nbins_nhood = 100,sel_clusters = ['1','5'],reff_cluster = '1',num_genes_auto = 4, pv_cellphone = 0.001, alpha = 0.001,num_top_gene_de_vp = 4, *args, **kwargs):
         self.n_genes_rank = n_genes_rank
@@ -142,9 +143,10 @@ class SpataStatReport(SpatialStatsSQ):
             self.set_image_para()
             sq.pl.ligrec(self.andata, cluster_key="clusters",pvalue_threshold = 0.001,remove_empty_interactions = True, alpha = 0.001)
             
-    #voyager analysis
+    ########## voyager analysis ###########
+    
     def vg_pca_report(self):
-        with PdfPages(os.path.join(self.outPath, f'Report__PCA_elbow_vg_{self.FilePrefix}.pdf')) as pdf:
+        with PdfPages(os.path.join(self.outPath, f'Report__PCA_elbow_vp_{self.FilePrefix}.pdf')) as pdf:
             self.set_image_para()
             fig, axs = plt.subplots(1, 1, figsize=(4, 4))
             vp.plt.elbow_plot(self.andata, ndims=30)
@@ -152,25 +154,89 @@ class SpataStatReport(SpatialStatsSQ):
             pdf.savefig()
             plt.close()
     
+    def plot_spatial_vp(self):
+        print("Report spatial map vp")
+        with PdfPages(os.path.join(self.outPath, f'Report_spatial_map_plot_vp_{self.FilePrefix}.pdf')) as pdf:
+            self.set_image_para()
+            fig, axs = plt.subplots(1, 1, figsize=(6, 10))
+            vp.plt.plot_spatial_feature(self.andata, features = 'cluster', color = 'cluster',ncol = 1,image_kwargs=None,_ax  = axs)
+            axs.set_xticks([])
+            axs.set_yticks([])
+            fig.tight_layout()
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
+            pdf.savefig()
+            plt.close()
+    
+    def hist_2d_plot(self):
+        with PdfPages(os.path.join(self.outPath, f'Report_2d_plot_{self.FilePrefix}.pdf')) as pdf:
+            self.set_image_para()
+            fig, axs = plt.subplots(1, 1, figsize=(4, 4))
+            vp.plotting.plot_barcodes_bin2d(self.andata,x='sum',y='detected',ax = axs)
+            fig.tight_layout()
+            plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
+            pdf.savefig()
+            plt.close()
+    
+    def moransIplot_vp(self):
+        def plotMI(feature):
+            with PdfPages(os.path.join(self.outPath, f'Report__MoransI_vg_{feature}_{self.FilePrefix}.pdf')) as pdf:
+                self.set_image_para()
+                fig, axs = plt.subplots(1, 1, figsize=(4, 4))
+                ax = vp.plt.moran_plot(self.andata, feature=feature, color_by='cluster', alpha=0.5)
+                plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
+                pdf.savefig(bbox_inches='tight')  # Save with tight bounding box to include all plot parts
+                plt.close()
+        plotMI(feature = 'sum')
+        plotMI(feature = 'detected')
+        plotMI(feature = 'subsets_mito_percent')
+        
     def de_vg(self):
         with PdfPages(os.path.join(self.outPath, f'Report__GE_vg_{self.FilePrefix}.pdf')) as pdf:
             self.set_image_para()
             marker_genes =self.andata.uns["marker_genes"] 
-            _ = vp.plt.plot_expression(self.andata,marker_genes[:self.num_top_gene_de_vp],groupby='cluster',show_symbol=True,layer='logcounts',figsize=(9, 6), scatter_points=False) 
+            vp.plt.plot_expression(self.andata,marker_genes[:self.num_top_gene_de_vp],groupby='cluster',show_symbol=True,layer='logcounts',figsize=(5, 4), scatter_points=False) 
             plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()
             
-            
-    def moransIplot_vp(self):
-        with PdfPages(os.path.join(self.outPath, f'Report__MoransI_vg_{self.FilePrefix}.pdf')) as pdf:
-            self.set_image_para()
-            fig, axs = plt.subplots(1, 3, figsize=(16,5))
+    def plot_vp_qc(self):
+        qc_features = ["sum", "detected", "subsets_mito_percent"]
+        with PdfPages(os.path.join(self.outPath, f'Quality_Control_vp_{self.FilePrefix}.pdf')) as pdf:
+            def rm_xy(ax):
+                ax.set_xticks([])
+                ax.set_yticks([])
+    
+            fig, axs = plt.subplots(3, 1, figsize=(6, 20))
             axs = axs.ravel()
-            vp.plt.moran_plot(self.andata, feature='sum', color_by='cluster', alpha=0.5, ax = axs[0])
-            vp.plt.moran_plot(self.andata, feature='detected', color_by='cluster', alpha=0.5, ax = axs[1])
-            vp.plt.moran_plot(self.andata, feature='subsets_mito_percent',color_by="cluster",alpha=0.5,ax = axs[2])
-            plt.draw()  # Ensure all plots are drawn
+            vp.plt.plot_spatial_feature(
+                self.andata,
+                features = qc_features[0],
+                ncol = 1,
+                image_kwargs=None,
+                _ax  = axs[0])
+
+            vp.plt.plot_spatial_feature(
+                self.andata,
+                features = qc_features[1],
+                ncol = 1,
+                image_kwargs=None,
+                _ax  = axs[1])
+
+            vp.plt.plot_spatial_feature(
+                self.andata,
+                features = qc_features[2],
+                    ncol = 1,
+                image_kwargs=None,
+                _ax  = axs[2])
+            
             fig.tight_layout()
-            pdf.savefig(fig, bbox_inches='tight')  # Save with tight bounding box to include all plot parts
-            plt.close(fig)
+            rm_xy(axs[0])
+            rm_xy(axs[1])
+            rm_xy(axs[2])
+
+            plt.subplots_adjust(left=0.3, right=0.9, top=0.9, bottom=0.2)
+            pdf.savefig()
+            plt.close()
+        return
+    
+

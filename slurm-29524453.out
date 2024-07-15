@@ -1,6 +1,0 @@
-[+] Loading cell2location  0.1.3  ... 
-[rank: 0] Global seed set to 0
-/usr/local/apps/cell2location/conda/envs/0.1.3/lib/python3.9/site-packages/anndata/_core/anndata.py:1832: UserWarning: Variable names are not unique. To make them unique, call `.var_names_make_unique`.
-  utils.warn_names_duplicates("var")
-/usr/local/apps/cell2location/conda/envs/0.1.3/lib/python3.9/site-packages/scanpy/readwrite.py:413: DtypeWarning: Columns (1,2,3,4,5) have mixed types. Specify dtype option on import or set low_memory=False.
-  positions = pd.read_csv(files['tissue_positions_file'], header=None)

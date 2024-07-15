@@ -2,6 +2,7 @@ import debugpy
 import scanpy as sc
 import squidpy as sq
 import pandas as pd
+import anndata
 from collections import OrderedDict
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -22,10 +23,11 @@ class viziumHD:
     outPath : str
         The output directory path where the results, including the quality control report, will be saved.
     '''
-    def __init__(self, path, outPath, FilePrefix):
+    def __init__(self, path, outPath, FilePrefix, hdffileName = "sp_countAndata.h5ad"):
         self.path = path
         self.outPath = outPath
         self.FilePrefix = FilePrefix
+        self.hdffileName = hdffileName
         self.parquet_to_csv()
         self.andata = self.readVizHD()
         
@@ -55,7 +57,10 @@ class viziumHD:
         plt.rcParams['axes.titlesize'] = 12
         plt.rcParams['xtick.labelsize'] = 12
         plt.rcParams['ytick.labelsize'] = 12
-        
+    
+    def writeAnn(self):
+        print("prepeare for writing")
+        self.andata.write(os.path.join(self.outPath, self.hdffileName))    
     
     @staticmethod
     def print_all_keys(d, parent_key=''):

@@ -12,4 +12,5 @@ token.txt
 *.csv
 *.pkl
 *.out
+*.pyc
 token.txt

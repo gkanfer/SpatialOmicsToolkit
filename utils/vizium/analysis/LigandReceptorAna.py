@@ -20,12 +20,12 @@ class LigandReceptorAna(SpatialStatsSQ):
     def run_cellphonedb(self):
         sq.gr.ligrec(self.andata,
         n_perms=1000,
-        cluster_key="clusters",
+        cluster_key="cluster",
         copy=False,
         use_raw=False,
         transmitter_params={"categories": "ligand"},
         receiver_params={"categories": "receptor"},)
         print("Starting Ligand Receptor interaction analysis")
         with PdfPages(os.path.join(self.outPath, f'Report__ligandReceptor{self.FilePrefix}.pdf')) as pdf:
-            sq.pl.ligrec(self.andata, cluster_key="clusters",pvalue_threshold = 0.001,remove_empty_interactions = True, alpha = 0.001)
+            sq.pl.ligrec(self.andata, cluster_key="cluster",pvalue_threshold = 0.1,remove_empty_interactions = True, alpha = 0.01)
             

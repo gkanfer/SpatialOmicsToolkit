@@ -12,6 +12,7 @@ import numpy as np
 import voyagerpy as vp
 from leidenalg import ModularityVertexPartition
 import geopandas as gpd
+from collections import OrderedDict
 
 
 class analysis_sq(applyqc):
@@ -19,7 +20,6 @@ class analysis_sq(applyqc):
         self.leiden_resolution = leiden_resolution
         self.leiden_iterations = leiden_iterations
         super().__init__(*args, **kwargs)
-        self.perform_analysis()
         if self.voygerpyRead:
             self.perform_analysis_vp()
         else:
@@ -43,19 +43,21 @@ class analysis_sq(applyqc):
         return
     
     def perform_analysis_vp(self):
-        is_mt = self.andata.var_names.str.startswith('mt')
-        vp.utils.add_per_cell_qcmetrics(self.andata, subsets={'mito': is_mt})
+        # is_mt = self.andata.var_names.str.startswith('mt')
+        # vp.utils.add_per_cell_qcmetrics(self.andata, subsets={'mito': is_mt})
 
         spot_diameter_fullres = self.andata.uns['spatial']['scale'].pop('spot_diameter_fullres')
         self.andata.uns['spatial']['scale']['spot_diameter_fullres'] = {'pxl_col_in_fullres':spot_diameter_fullres,'pxl_row_in_fullres':spot_diameter_fullres}
-
-        self.andata.uns['spatial']['scale']
 
         scale = 1
         scale_dict = self.andata.uns["spatial"].get("scale", {})
         spot_diam = scale_dict.get("spot_diameter_fullres")
         visium_spots = gpd.GeoSeries.from_xy(self.andata.obsm['spatial'][:,0], self.andata.obsm['spatial'][:,1]).scale(scale, scale, origin=(0, 0))
 
+        _ = vp.spatial.set_geometry(self.andata, geom="spot_poly", values=visium_spots)
+        self.andata.uns['config'] = OrderedDict()
+        self.andata.uns["config"]["secondary_var_names"] = self.andata.var_names
+                
         self.andata.layers['counts'] = self.andata.X.copy()
         # Log-normalize the adata.X matrix
         vp.utils.log_norm_counts(self.andata, inplace=True)
@@ -70,11 +72,8 @@ class analysis_sq(applyqc):
         self.andata.var.loc[hvgs, 'highly_variable'] = True
 
         self.andata.X = vp.utils.scale(self.andata.X, center=True)
-        sc.tl.pca(self.andata, use_highly_variable=True, n_comps=30, random_state=1337)
+        sc.tl.pca(self.andata, use_highly_variable=True, n_comps=self.n_comps, random_state=1337)
         self.andata.X = self.andata.layers['logcounts'].copy()
-
-        self.andata.uns['config'] = OrderedDict()
-        self.andata.uns["config"]["secondary_var_names"] = self.andata.var_names
 
         sc.pp.neighbors(
             self.andata,
