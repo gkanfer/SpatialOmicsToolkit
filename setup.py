@@ -9,5 +9,4 @@ setup(
         'console_scripts': [
             'run_vizium=scripts.run_vizum:main',
         ],
-    },
-)
+    },)
