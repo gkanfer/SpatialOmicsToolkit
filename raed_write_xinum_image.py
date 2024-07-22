@@ -5,6 +5,7 @@ import seaborn as sns
 from skimage.transform import resize
 import argparse
 import numpy as np
+import skimage
 
 def raed_write_xinum_image(file_name,path_morphology_focus,scale,ch,prefix):
     file_path = os.path.join(path_morphology_focus, file_name)
