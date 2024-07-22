@@ -23,13 +23,16 @@ class StDatareader:
     outPath : str
         The output directory path where the results, including the quality control report, will be saved.
     '''
-    def __init__(self, path, outPath, FilePrefix, hdffileName = "sp_countAndata.h5ad"):
+    def __init__(self, path, outPath, FilePrefix, hdffileName = "sp_countAndata.h5ad", method = "vizium"):
         self.path = path
         self.outPath = outPath
         self.FilePrefix = FilePrefix
         self.hdffileName = hdffileName
-        self.parquet_to_csv()
-        self.andata = self.readVizHD()
+        if self.method:
+            self.parquet_to_csv()
+            self.andata = self.readVizHD()
+        else:
+            
         
     def parquet_to_csv(self):
         '''
@@ -44,6 +47,9 @@ class StDatareader:
         
     def readVizHD(self):
         return sc.read_visium(path = self.path)
+    
+    def readXeinum(self):
+        
     
     def printAnnD(self):
         print(f'{self.andata}')
