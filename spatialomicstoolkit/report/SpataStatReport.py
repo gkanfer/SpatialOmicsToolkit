@@ -1,4 +1,4 @@
-from utils.vizium.analysis.SpatialStatsSQ import SpatialStatsSQ
+from spatialomicstoolkit.analysis.SpatialStatsSQ import SpatialStatsSQ
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -11,6 +11,7 @@ import numpy as np
 import scanpy as sc
 import squidpy as sq
 import voyagerpy as vp
+from spatialomicstoolkit.utils import plotfunc as pp
 
 
 
@@ -194,7 +195,8 @@ class SpataStatReport(SpatialStatsSQ):
         with PdfPages(os.path.join(self.outPath, f'Report__GE_vg_{self.FilePrefix}.pdf')) as pdf:
             self.set_image_para()
             marker_genes =self.andata.uns["marker_genes"] 
-            vp.plt.plot_expression(self.andata,marker_genes[:self.num_top_gene_de_vp],groupby='cluster',show_symbol=True,layer='logcounts',figsize=(5, 4), scatter_points=False) 
+            pp.plot_expression_violin(self.andata,marker_genes[:self.num_top_gene_de_vp],groupby='cluster',show_symbol=True,layer='logcounts',figsize=(5, 4), scatter_points=False)
+            #vp.plt.plot_expression(self.andata,marker_genes[:self.num_top_gene_de_vp],groupby='cluster',show_symbol=True,layer='logcounts',figsize=(5, 4), scatter_points=False) 
             plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
             pdf.savefig()
             plt.close()

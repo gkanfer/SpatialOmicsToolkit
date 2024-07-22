@@ -43,15 +43,12 @@ class analysis_sq(applyqc):
         return
     
     def perform_analysis_vp(self):
-        # is_mt = self.andata.var_names.str.startswith('mt')
-        # vp.utils.add_per_cell_qcmetrics(self.andata, subsets={'mito': is_mt})
-
-        spot_diameter_fullres = self.andata.uns['spatial']['scale'].pop('spot_diameter_fullres')
-        self.andata.uns['spatial']['scale']['spot_diameter_fullres'] = {'pxl_col_in_fullres':spot_diameter_fullres,'pxl_row_in_fullres':spot_diameter_fullres}
+        #spot_diameter_fullres = self.andata.uns['spatial']['scale'].pop('spot_diameter_fullres')
+        # self.andata.uns['spatial']['scale']['spot_diameter_fullres'] = {'pxl_col_in_fullres':spot_diameter_fullres,'pxl_row_in_fullres':spot_diameter_fullres}
 
         scale = 1
-        scale_dict = self.andata.uns["spatial"].get("scale", {})
-        spot_diam = scale_dict.get("spot_diameter_fullres")
+        #scale_dict = self.andata.uns["spatial"].get("scale", {})
+        #spot_diam = scale_dict.get("spot_diameter_fullres")
         visium_spots = gpd.GeoSeries.from_xy(self.andata.obsm['spatial'][:,0], self.andata.obsm['spatial'][:,1]).scale(scale, scale, origin=(0, 0))
 
         _ = vp.spatial.set_geometry(self.andata, geom="spot_poly", values=visium_spots)

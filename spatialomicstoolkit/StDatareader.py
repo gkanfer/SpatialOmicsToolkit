@@ -11,6 +11,7 @@ import seaborn as sns
 import os
 import gzip
 import numpy as np
+import zarr
 
 class StDatareader:
     '''
@@ -23,16 +24,18 @@ class StDatareader:
     outPath : str
         The output directory path where the results, including the quality control report, will be saved.
     '''
-    def __init__(self, path, outPath, FilePrefix, hdffileName = "sp_countAndata.h5ad", method = "vizium"):
+    def __init__(self, path, outPath, FilePrefix, hdffileName = "sp_countAndata.h5ad", method = "vizium", subsample = False):
         self.path = path
         self.outPath = outPath
         self.FilePrefix = FilePrefix
         self.hdffileName = hdffileName
-        if self.method:
+        self.method = method
+        self.subsample = subsample
+        if self.method == "vizium":
             self.parquet_to_csv()
             self.andata = self.readVizHD()
         else:
-            
+            self.andata = self.readXenium()
         
     def parquet_to_csv(self):
         '''
@@ -48,8 +51,22 @@ class StDatareader:
     def readVizHD(self):
         return sc.read_visium(path = self.path)
     
-    def readXeinum(self):
-        
+    def readXenium(self):
+        path_xenium = os.path.join(self.path,"cell_feature_matrix.h5")
+        path_cells = os.path.join(self.path,"cells.zarr.zip")
+        adata = sc.read_10x_h5(path_xenium)
+        def open_zarr(path: str) -> zarr.Group:
+            store = (zarr.ZipStore(path, mode="r") if path.endswith(".zip") else zarr.DirectoryStore(path))
+            return zarr.group(store=store)
+        root = open_zarr(path_cells)
+        column_names = dict(root['cell_summary'].attrs.items())['column_names']
+        def build_obs(andata,root,column_names):
+            for i in range(len(column_names)):
+                andata.obs[str(column_names[i])] = np.array(root["cell_summary"])[:,i]
+            spatial = andata.obs[["cell_centroid_x", "cell_centroid_y"]]
+            adata.obsm["spatial"] = spatial.values
+            return andata
+        return build_obs(adata,root,column_names)
     
     def printAnnD(self):
         print(f'{self.andata}')

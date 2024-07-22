@@ -1,4 +1,5 @@
 from spatialomicstoolkit.StDatareader import StDatareader
+from collections import OrderedDict
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -115,10 +116,19 @@ class applyqc(StDatareader):
         if self.max_gene_count > 0:
             sc.pp.filter_genes(self.andata, max_counts=self.max_gene_count)
         self.andata.obsm['spatial'] = np.array(self.andata.obsm['spatial'], dtype=np.float64)
-        self.andata.uns['spatial']['img'] = self.andata.uns['spatial'][self.dataset_key].pop("images")
-        self.andata.uns['spatial']['scale'] = self.andata.uns['spatial'][self.dataset_key].pop("scalefactors")
-        self.andata.uns['spatial']['metadata'] = self.andata.uns['spatial'][self.dataset_key].pop("metadata")
-        self.andata.uns['spatial'].pop(self.dataset_key)
+        if not(self.method=='vizium'):
+            #xenium
+            self.andata.uns = {"spatial":{"scale":1}}
+            self.andata.uns['config'] = OrderedDict()
+            self.andata.uns["config"]["secondary_var_names"] = self.andata.var_names
+            if self.subsample:
+                # incase just wanted to test if program works
+                sc.pp.subsample(self.andata, n_obs=1_000)
+        else:
+            self.andata.uns['spatial']['img'] = self.andata.uns['spatial'][self.dataset_key].pop("images")
+            self.andata.uns['spatial']['scale'] = self.andata.uns['spatial'][self.dataset_key].pop("scalefactors")
+            self.andata.uns['spatial']['metadata'] = self.andata.uns['spatial'][self.dataset_key].pop("metadata")
+            self.andata.uns['spatial'].pop(self.dataset_key)
         is_mt = self.andata.var_names.str.startswith('mt')
         vp.utils.add_per_cell_qcmetrics(self.andata, subsets={'mito': is_mt})
         return
