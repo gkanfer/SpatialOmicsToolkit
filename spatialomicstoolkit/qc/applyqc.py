@@ -46,7 +46,7 @@ class applyqc(StDatareader):
     dataset_key : str, optional
         Key or identifier for the dataset. Default is "Visium_HD_Mouse_Brain".
     '''
-    def __init__(self,mitochon = "mt-", min_counts=50,min_genes = 80,min_gene_count = 0,max_gene_count = 0, rmvCellth = 50, mitoTh = 20, totalThr=10000, bins_total=40, bins_gene_plot=60, geneThr=4000,bins_gene_plot_thr=60, n_comps = 50,voygerpyRead = False, dataset_key = "Visium_HD_Mouse_Brain", n_neighbors = 80, random_state = 34566, *args, **kwargs):
+    def __init__(self,mitochon = "mt-", min_counts=50,min_genes = 80,min_gene_count = 0,max_gene_count = 0, rmvCellth = 50, mitoTh = 20, totalThr = 10000, bins_total = 40, bins_gene_plot = 60, geneThr = 4000, bins_gene_plot_thr = 60, n_comps = 15, voygerpyRead = False, dataset_key = "Visium_HD_Mouse_Brain", n_neighbors = 30, random_state = 34566, *args, **kwargs):
         self.mitochon = mitochon #Mitochondia-encoded genes (gene names start with prefix mt- or MT-)
         self.min_counts = min_counts
         self.min_genes = min_genes
@@ -123,7 +123,7 @@ class applyqc(StDatareader):
             self.andata.uns["config"]["secondary_var_names"] = self.andata.var_names
             if self.subsample:
                 # incase just wanted to test if program works
-                sc.pp.subsample(self.andata, n_obs=1_000)
+                sc.pp.subsample(self.andata, n_obs=self.subsample)
         else:
             self.andata.uns['spatial']['img'] = self.andata.uns['spatial'][self.dataset_key].pop("images")
             self.andata.uns['spatial']['scale'] = self.andata.uns['spatial'][self.dataset_key].pop("scalefactors")

@@ -1,9 +1,9 @@
 import anndata
 import pandas as pd
 import pickle
-from spatialomicstoolkit.analysis.SpatialStatsSQ import SpatialStatsSQ
+from spatialomicstoolkit.report.SpataStatReport import SpataStatReport
 
-class cellPhoneDBPrep(SpatialStatsSQ):
+class cellPhoneDBPrep(SpataStatReport):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

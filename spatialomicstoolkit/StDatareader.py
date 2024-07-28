@@ -3,6 +3,7 @@ import scanpy as sc
 import squidpy as sq
 import pandas as pd
 import anndata
+from scipy.sparse import csr_matrix
 from collections import OrderedDict
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -12,6 +13,8 @@ import os
 import gzip
 import numpy as np
 import zarr
+import scipy
+import geopandas as gpd
 
 class StDatareader:
     '''
@@ -24,7 +27,7 @@ class StDatareader:
     outPath : str
         The output directory path where the results, including the quality control report, will be saved.
     '''
-    def __init__(self, path, outPath, FilePrefix, hdffileName = "sp_countAndata.h5ad", method = "vizium", subsample = False):
+    def __init__(self, path, outPath, FilePrefix, hdffileName = "sp_countAndata.h5ad", method = "vizium", subsample = None):
         self.path = path
         self.outPath = outPath
         self.FilePrefix = FilePrefix
@@ -107,8 +110,39 @@ class StDatareader:
                 if isinstance(value, (dict, OrderedDict)):
                     print_all_keys(value, new_key)
         
-    
-    
+    def writeAnn_xenium(self):
+        print("prepare for writing")
+        self.andata.X = self.andata.layers['counts']
+        del self.andata.layers
+        keys =[keys for keys in self.andata.obsp.keys()]
+        for key in keys:
+            matrix = self.andata.obsp[key]
+            if isinstance(matrix, scipy.sparse.spmatrix):
+                self.andata.obsp[key] = np.array(self.andata.obsp[key].todense())
+            if isinstance(matrix, OrderedDict):
+                self.andata.obsp[key] = dict(self.andata.obsp[key]) 
+                # self.andata.obsp.pop(key)
+        keys = [keys for keys in self.andata.obsm.keys()]
+        for key in keys:
+            matrix = self.andata.obsm[key]
+            if isinstance(matrix, scipy.sparse.spmatrix):
+                self.andata.obsm[key] = np.array(self.andata.obsm[key].todense())
+            if isinstance(matrix, OrderedDict):
+                self.andata.obsm[key] = dict(self.andata.obsm[key]) 
+                # self.andata.obsm.pop(key)
+        keys = [keys for keys in self.andata.uns.keys()]
+        for key in keys:
+            matrix = self.andata.uns[key]
+            if isinstance(matrix, scipy.sparse.spmatrix):
+                self.andata.uns[key] = np.array(self.andata.uns[key].todense()) 
+                #self.andata.uns.pop(key)
+            if isinstance(matrix, OrderedDict):
+                self.andata.uns[key] = dict(self.andata.uns[key])
+        del self.andata.uns['config']
+        del self.andata.uns['spatial']['knn_weights']
+        self.andata.obsm['geometry'].to_parquet(path = os.path.join(self.outPath,self.FilePrefix + 'test.parquet'), compression="snappy")
+        del self.andata.obsm['geometry'] 
+        self.andata.write(os.path.join(self.outPath, self.hdffileName))
         
         
              

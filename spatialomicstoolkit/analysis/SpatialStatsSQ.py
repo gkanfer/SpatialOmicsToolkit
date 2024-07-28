@@ -16,10 +16,8 @@ class SpatialStatsSQ(analysis_sq):
     '''
     wn is wight Matrix 
     '''
-    def __init__(self,coord_type = "generic",wn_neig = 20,wn_n_pcs = 9, *args, **kwargs):
+    def __init__(self,coord_type = "generic", *args, **kwargs):
         self.coord_type = coord_type
-        self.wn_neig = wn_neig
-        self.wn_n_pcs = wn_n_pcs
         super().__init__(*args, **kwargs)
         if self.voygerpyRead:
             self.perform_spatial_statistics_vp()
@@ -40,8 +38,8 @@ class SpatialStatsSQ(analysis_sq):
     def perform_spatial_statistics_vp(self):
         sc.pp.neighbors(
             self.andata,
-            n_neighbors=self.wn_neig,
-            n_pcs=self.wn_n_pcs,
+            n_neighbors=self.n_neighbors,
+            n_pcs=self.n_comps,
             use_rep='X_pca',
             knn=True,
             random_state=self.random_state,

@@ -189,7 +189,7 @@ class SpataStatReport(SpatialStatsSQ):
                 plt.close()
         plotMI(feature = 'sum')
         plotMI(feature = 'detected')
-        plotMI(feature = 'subsets_mito_percent')
+        #plotMI(feature = 'subsets_mito_percent')
         
     def de_vg(self):
         with PdfPages(os.path.join(self.outPath, f'Report__GE_vg_{self.FilePrefix}.pdf')) as pdf:
@@ -240,5 +240,7 @@ class SpataStatReport(SpatialStatsSQ):
             pdf.savefig()
             plt.close()
         return
+    
+    
     
 

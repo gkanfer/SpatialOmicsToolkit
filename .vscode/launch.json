@@ -5,7 +5,7 @@
             "name": "Python: Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/draft.py",
+            "program": "${workspaceFolder}/run_xenium_smallSet.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}", 
             "python": "/data/kanferg/conda/envs/squidpy-voyagerpy/bin/python3",
