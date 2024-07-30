@@ -27,9 +27,9 @@ def plot_dist(andata,column,ax,type = 'obs', bins = 'auto',title = '',xlab = '',
     '''
     palette1 = sns.color_palette("colorblind",9)
     if type == 'obs':
-        arr = andata.obs['column'].values
+        arr = andata.obs[column].values
     else:
-        arr = andata.var['column'].values
+        arr = andata.var[column].values
     bin_edges = np.histogram_bin_edges(arr, bins='auto')
     # Calculate bin edges using NumPy's 'auto' method
     # Calculate bin width
@@ -47,5 +47,54 @@ def plot_bin2d(andata,ax,title = '',xlab = '',ylab =''):
     ax.set_xlabel(xlab)
     ax.set_title(title)
     
-def plot_spatial(andata,ax,title = '',xlab = '',ylab =''):
-    pass
+def plot_spatial_qc(andata,ax,column,title = '',xlab = '',ylab =''):
+    '''
+    e.g.
+    # Create a blue gradient palette
+    palette = sns.color_palette("Blues", as_cmap=True)
+    listed_cmap = ListedColormap(palette(np.linspace(0, 1, 256)))
+
+    # Plot using Matplotlib
+    fig, ax = plt.subplots(figsize=(5, 5))
+    sc = ax.scatter(x=df['x'], y=df['y'], c=df['total_counts'], cmap=listed_cmap)
+
+    # Add color bar with title
+    cbar = fig.colorbar(sc)
+    #cbar.set_label('Total Count', fontsize=12)
+
+    # Automatically set tick locations and labels
+    locator = MaxNLocator(nbins=5)
+    cbar.locator = locator
+    cbar.update_ticks()
+
+    # Explicitly set tick labels to ensure they show
+    ticks = cbar.get_ticks()
+    cbar.set_ticks(ticks)
+    cbar.set_ticklabels([f'{int(tick)}' for tick in ticks])
+
+    # Remove ticks and labels from the main plot
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+
+    plt.show()
+    '''
+    df = pd.DataFrame({str(column):andata.obs[column],'x':andata.obsm['spatial'][:,0],'y':andata.obsm['spatial'][:,1]})
+    custom_params = {"xtick.labelsize": 0,      # Remove x-axis tick labels
+    "ytick.labelsize": 0,      # Remove y-axis tick labels
+    "axes.labelsize": 0,       # Remove axis labels
+    "xtick.major.size": 0,     # Remove x-axis major ticks
+    "xtick.minor.size": 0,     # Remove x-axis minor ticks
+    "ytick.major.size": 0,     # Remove y-axis major ticks
+    "ytick.minor.size": 0      # Remove y-axis minor ticks
+    }
+    sns.set_theme(style="whitegrid", palette="pastel", rc=custom_params)
+    palette = sns.color_palette("Blues", as_cmap=True)
+    listed_cmap = ListedColormap(palette(np.linspace(0, 1, 256)))
+    sc = ax.scatter(x=df['x'], y=df['y'], c=df['total_counts'], cmap=listed_cmap)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+    return sc
