@@ -7,6 +7,7 @@ import os
 import gzip
 import numpy as np
 import rapids_singlecell as rsc
+import pandas as pd
 
 
 def set_image_para(self):
@@ -40,6 +41,16 @@ def plot_dist(andata,column,ax,type = 'obs', bins = 'auto',title = '',xlab = '',
     ax.set_xlabel(xlab)
     ax.set_title(title)
     
+def custom_paramsForSPatialPlot():
+    custom_params = {"xtick.labelsize": 0,      
+                    "ytick.labelsize": 0,      
+                    "axes.labelsize": 0,       
+                    "xtick.major.size": 0,     
+                    "xtick.minor.size": 0,     
+                    "ytick.major.size": 0,    
+                    "ytick.minor.size": 0 }
+    return custom_params
+    
 def plot_bin2d(andata,ax,title = '',xlab = '',ylab =''):
     palette1 = sns.color_palette("colorblind",10)
     ax.scatter(andata.obs['total_counts'],andata.obs['n_genes_by_counts'], alpha=0.6,color = palette1[0],edgecolor='black')
@@ -47,7 +58,7 @@ def plot_bin2d(andata,ax,title = '',xlab = '',ylab =''):
     ax.set_xlabel(xlab)
     ax.set_title(title)
     
-def plot_spatial_qc(andata,ax,column,title = '',xlab = '',ylab =''):
+def plot_spatial_qc(andata,ax,column,title = '',xlab = '',ylab ='',size = 2):
     '''
     e.g.
     # Create a blue gradient palette
@@ -81,20 +92,47 @@ def plot_spatial_qc(andata,ax,column,title = '',xlab = '',ylab =''):
     plt.show()
     '''
     df = pd.DataFrame({str(column):andata.obs[column],'x':andata.obsm['spatial'][:,0],'y':andata.obsm['spatial'][:,1]})
-    custom_params = {"xtick.labelsize": 0,      # Remove x-axis tick labels
-    "ytick.labelsize": 0,      # Remove y-axis tick labels
-    "axes.labelsize": 0,       # Remove axis labels
-    "xtick.major.size": 0,     # Remove x-axis major ticks
-    "xtick.minor.size": 0,     # Remove x-axis minor ticks
-    "ytick.major.size": 0,     # Remove y-axis major ticks
-    "ytick.minor.size": 0      # Remove y-axis minor ticks
-    }
+    custom_params = custom_paramsForSPatialPlot()
     sns.set_theme(style="whitegrid", palette="pastel", rc=custom_params)
     palette = sns.color_palette("Blues", as_cmap=True)
     listed_cmap = ListedColormap(palette(np.linspace(0, 1, 256)))
-    sc = ax.scatter(x=df['x'], y=df['y'], c=df['total_counts'], cmap=listed_cmap)
+    sc = ax.scatter(x=df['x'], y=df['y'], c=df['total_counts'], cmap=listed_cmap,s = size)
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_xlabel('')
     ax.set_ylabel('')
     return sc
+
+def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 2):
+    palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
+    df = pd.DataFrame({'cluster':andata.obs['cluster'],'x':andata.obsm['spatial'][:,0],'y':andata.obsm['spatial'][:,1]})
+    if features:
+        df[df['cluster'].isin([features])]
+    num_classes = len(df['cluster'].unique())
+    if num_classes==1:
+        listed_cmap = ListedColormap(palette)
+    else:
+        num_classes = len(df['cluster'].unique())
+        extended_palette = palette * (num_classes // len(palette) + 1)
+        extended_palette = extended_palette[:num_classes]
+        listed_cmap = ListedColormap(extended_palette)
+        
+    custom_params = custom_paramsForSPatialPlot()
+    sns.set_theme(style="whitegrid", palette="pastel", rc=custom_params)
+    for i, cluster in enumerate(df['cluster'].unique()):
+        cluster_data = df[df['cluster'] == cluster]
+        ax.scatter( x=cluster_data['x'], y=cluster_data['y'], color=listed_cmap(i), label=f'{cluster}', s=1, alpha=0.6)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+    legend = ax.legend( title="Cluster",
+                        bbox_to_anchor=(1.05, 1),  # Position the legend outside the plot
+                        loc='upper left',
+                        fontsize='small',  # Control the font size
+                        title_fontsize='medium',
+                        markerscale=5,  # Increase the size of the legend markers
+                        frameon=False# Control the title font size
+                        )
+    
+    

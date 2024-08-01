@@ -21,8 +21,11 @@ class clustersMake(applyqc):
     def perform_analysis(self):
         rsc.pp.normalize_total(self.andata)
         rsc.pp.log1p(self.andata)
-        rsc.pp.scale(self.andata)
-        rsc.pp.highly_variable_genes(self.andata,flavor="pearson_residuals", layer="counts")
+        self.andata.layers['log'] = self.andata.X.copy()
+        # rsc.pp.scale(self.andata) 
+        rsc.pp.highly_variable_genes(self.andata, n_top_genes=5000, flavor="seurat_v3", layer="counts")
+        self.andata = self.andata[:, self.andata.var["highly_variable"]]
+        rsc.pp.scale(self.andata, max_value=10)
         rsc.pp.pca(self.andata, n_comps=self.n_comps,random_state=self.random_state)
         rsc.pp.neighbors(self.andata,n_pcs=self.n_comps,use_rep='X_pca',n_neighbors=self.n_neighbors)
         rsc.tl.leiden(self.andata,random_state=self.random_state,resolution=self.leiden_resolution,key_added='cluster')
