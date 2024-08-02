@@ -8,6 +8,7 @@ import gzip
 import numpy as np
 import rapids_singlecell as rsc
 import pandas as pd
+import random
 
 
 def set_image_para(self):
@@ -20,8 +21,6 @@ def set_image_para(self):
     plt.rcParams['ytick.labelsize'] = 12
 
 
-
-    
 def plot_dist(andata,column,ax,type = 'obs', bins = 'auto',title = '',xlab = '',ylab =''):
     '''
     You can replace 'auto' with any other method (e.g., 'fd', 'doane', 'scott', 'rice', 'sturges', or 'sqrt')
@@ -103,8 +102,10 @@ def plot_spatial_qc(andata,ax,column,title = '',xlab = '',ylab ='',size = 2):
     ax.set_ylabel('')
     return sc
 
-def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 2):
+def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 2, random_palette = False):
     palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
+    if random_palette:
+        random.shuffle(palette) 
     df = pd.DataFrame({'cluster':andata.obs['cluster'],'x':andata.obsm['spatial'][:,0],'y':andata.obsm['spatial'][:,1]})
     if features:
         df[df['cluster'].isin([features])]
@@ -135,4 +136,14 @@ def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 
                         frameon=False# Control the title font size
                         )
     
-    
+def plot_expression(df,marker,ax,**kwargs):
+    custom_params = {"axes.spines.right": False, "axes.spines.top": False}
+    sns.set_theme(style="ticks", rc=custom_params)  
+    g = sns.violinplot(data = df, x = "cluster", y = marker, ax = ax, **kwargs)
+    max_value = df[marker].max()
+    g.set(ylim = (0,max_value+1))
+    ax.text(0.95, 0.95, marker, transform=ax.transAxes, fontsize=12, verticalalignment='top',horizontalalignment='right')
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+    ax.tick_params(axis='x', labelsize=8)
+    ax.set_ylabel('read count \n [log-normalized]')
+    ax.set_xlabel('')

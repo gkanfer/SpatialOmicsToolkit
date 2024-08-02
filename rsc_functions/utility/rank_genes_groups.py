@@ -2,9 +2,14 @@ import rapids_singlecell as rsc
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
+import cupy
+import scipy.sparse as sp
 from statsmodels.stats.multitest import multipletests
+from matplotlib.ticker import MaxNLocator
+import seaborn as sns
+
 def rank_genes_groups(andata,return_andata = False):
-    andata.X = andata.layers["counts"]
+    andata.X = andata.layers["log"]
     rsc.tl.rank_genes_groups_logreg(andata, groupby="cluster",groups='all')
     def z_to_p(z):
         return 2 * (1 - stats.norm.cdf(abs(z)))
@@ -18,4 +23,21 @@ def rank_genes_groups(andata,return_andata = False):
         return andata , _
     else:
         return p_values,pvals_corrected_df
+    
+def return_markers(andata,marker):
+    if not 'rank_genes_groups' in [key for key in andata.uns.keys()]:
+        andata.X = andata.layers["log"]
+        rsc.tl.rank_genes_groups_logreg(andata, groupby="log",groups='all')
+    def sparseTonp(data_matrix):
+        if isinstance(data_matrix, (np.ndarray, np.matrix)):
+            dense_data = np.array(data_matrix)
+        else:
+            dense_data = data_matrix.toarray()
+        return dense_data
+    arr = sparseTonp(andata[:,andata.var.index.isin([marker])].X)
+    arr = np.ravel(arr)
+    arr = cupy.float32(arr.get())
+    return arr
+    
+    
     
