@@ -5,11 +5,27 @@
             "name": "Python: Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/run_xenium_smallSet.py",
+            "program": "${workspaceFolder}/draft_rapids_singlecell.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}", 
-            "python": "/data/kanferg/conda/envs/squidpy-voyagerpy/bin/python3",
+            "python": "/usr/local/apps/rapids-singlecell/0.10.4/bin/python3-rsc",
             "justMyCode": false,
         }
     ]
 }
+
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "name": "Python: Current File",
+//             "type": "debugpy",
+//             "request": "launch",
+//             "program": "${workspaceFolder}/run_xenium_smallSet.py",
+//             "console": "integratedTerminal",
+//             "cwd": "${workspaceFolder}", 
+//             "python": "/data/kanferg/conda/envs/squidpy-voyagerpy/bin/python3",
+//             "justMyCode": false,
+//         }
+//     ]
+// }

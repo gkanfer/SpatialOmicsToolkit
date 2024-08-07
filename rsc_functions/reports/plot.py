@@ -142,7 +142,7 @@ def plot_expression(df,marker,ax,**kwargs):
     ax.set_xlabel('')
     
     
-def plot_moran(andata,feature, figsize =(5,4),xlabel = '',ylabel = '',title = '',**kwargs):
+def plot_moran(andata,feature, figsize =(5,4),xlabel = '',ylabel = '',title = '', legend_title = '', **kwargs):
     from rsc_functions.utility.SpatialStats import compute_spatial_lag
     compute_spatial_lag(andata = andata,feature = feature)
     lagged_total_counts = andata.obs[f'lagged_{feature}'].values
@@ -163,9 +163,16 @@ def plot_moran(andata,feature, figsize =(5,4),xlabel = '',ylabel = '',title = ''
         'cluster': clusters_np
     })
 
-    palette = sns.color_palette("colorblind",len(clusters_np))
+    palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
+    num_classes = len(df['cluster'].unique())
+    extended_palette = palette * (num_classes // len(palette) + 1)
+    extended_palette = extended_palette[:num_classes]
+    listed_cmap = ListedColormap(extended_palette)
+        
+    # custom_params = custom_paramsForSPatialPlot()
+    # sns.set_theme(style="whitegrid", palette="pastel", rc=custom_params)
     
-    plt.rcParams['figure.dpi'] = 150
+    plt.rcParams['figure.dpi'] = 92
     plt.rcParams['font.family'] = ['serif']
     plt.rcParams['font.size'] = 12
     plt.rcParams['axes.labelsize'] = 12
@@ -175,12 +182,12 @@ def plot_moran(andata,feature, figsize =(5,4),xlabel = '',ylabel = '',title = ''
     
     r_squared_contain = {}
     fig, ax = plt.subplots(figsize=figsize)
-    for cluster in unique_clusters:
+    for i, cluster in enumerate(df['cluster'].unique()):
         # Filter the data for the current cluster
         cluster_data = df[df['cluster'] == cluster]
 
         # Scatter plot
-        ax.scatter(cluster_data[f'{feature}'], cluster_data[f'lagged_{feature}'], label='Data Points', color= palette[cluster], alpha=0.5, s = 0.5, **kwargs)
+        ax.scatter(cluster_data[f'{feature}'], cluster_data[f'lagged_{feature}'], color= listed_cmap(i), label=f'{cluster}', edgecolor='black',  **kwargs)
 
         # Linear regression for the linear fit
         model = LinearRegression()
@@ -189,24 +196,21 @@ def plot_moran(andata,feature, figsize =(5,4),xlabel = '',ylabel = '',title = ''
         line_y = model.predict(line_x.reshape(-1, 1))
 
         # Plot the linear fit
-        ax.plot(line_x, line_y, color=palette[cluster],label=f'{cluster}')
+        ax.plot(line_x, line_y, color=listed_cmap(i))
         
         # Calculate R-squared value
         r_squared = r2_score(cluster_data['lagged_total_counts'], model.predict(cluster_data['total_counts'].values.reshape(-1, 1)))
         r_squared_contain[f'{cluster}'] = [np.round(r_squared,2)]
         # Plot customization
-        legend = ax.legend( title="Cluster",
-                        bbox_to_anchor=(1.05, 1),  # Position the legend outside the plot
-                        loc='upper left',
-                        fontsize='small',  # Control the font size
-                        title_fontsize='medium',
-                        markerscale=5,  # Increase the size of the legend markers
-                        frameon=False# Control the title font size
-                        )
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.legend()
-    plt.show()
-    
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    legend = ax.legend(title=legend_title,
+                    bbox_to_anchor=(1.05, 1),  # Position the legend outside the plot
+                    loc='upper left',
+                    fontsize='small',  # Control the font size
+                    title_fontsize='medium',
+                    markerscale=5,  # Increase the size of the legend markers
+                    frameon=False # Control the title font size
+                    )
     return r_squared_contain

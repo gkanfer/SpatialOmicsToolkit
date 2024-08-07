@@ -39,11 +39,11 @@ import anndata
 from collections import OrderedDict
 import cupyx
 
-def compute_spatial_lag(andata,feature):
+def compute_spatial_lag(andata,feature,knn_key = 'knn_'):
     '''
         rsc.pp.neighbors(andata, n_pcs=15, use_rep='X_pca', n_neighbors=30,key_added = 'knn')
     '''
-    dist = andata.obsp['knn_distances'].copy()
+    dist = andata.obsp[f'{knn_key}distances'].copy()
     epsilon = 1e-10
     dist.data = 1 / (dist.data + epsilon)
     # row normalize the matrix, this makes the matrix dense.
@@ -52,8 +52,8 @@ def compute_spatial_lag(andata,feature):
     andata.obsp["knn_weights"] = cupyx.scipy.sparse.csr_matrix(dist)
     del dist
     knn_graph = "knn_weights"
-    andata.obsp["knn_connectivities"] = (andata.obsp[knn_graph] > 0).astype(cp.float32)    
-    dists = andata.obsp['knn_connectivities']
+    andata.obsp[f"{knn_key}connectivities"] = (andata.obsp[knn_graph] > 0).astype(cp.float32)    
+    dists = andata.obsp[f'{knn_key}connectivities']
     dists = cupyx.scipy.sparse.csr_matrix.toarray(dists)
     lagged_feat = f"lagged_{feature}"
     x = cp.array(andata.obs[feature].values)

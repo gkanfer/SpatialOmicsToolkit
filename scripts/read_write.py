@@ -37,9 +37,12 @@ from scipy.sparse import csr_matrix
 import scipy
 import anndata
 from collections import OrderedDict
-path = "/data/kanferg/Sptial_Omics/playGround/Data/Xenium/output_temp"
-pathout = "/data/kanferg/Sptial_Omics/SpatialOmicsToolkit/out_1"
-FilePrefix = "_072824" 
+from rsc_functions.utility.applyqc import applyqc
+from rsc_functions.reports.plot import plot_spatial,plot_spatial_data
+from rsc_functions.utility.rank_genes_groups import return_markers,rank_genes_groups
+from rsc_functions.reports.plot import plot_expression
+
+
 path_xenium = os.path.join(path,"cell_feature_matrix.h5")
 path_cells = os.path.join(path,"cells.zarr.zip")
 adata = sc.read_10x_h5(path_xenium)
@@ -59,9 +62,6 @@ def build_obs(andata,root,column_names):
     return andata
 andata = build_obs(adata,root,column_names)
 andata.var_names_make_unique()
-
-sc.pp.subsample(andata,copy=False,n_obs=100_000)
-
 andata.obsm['spatial'] = np.array(andata.obsm['spatial'], dtype=np.float64)
 andata.uns['config'] = OrderedDict()
 andata.uns["config"]["secondary_var_names"] = andata.var_names
@@ -78,14 +78,23 @@ andata = andata[:, andata.var["highly_variable"]]
 rsc.pp.scale(andata, max_value=10)
 rsc.pp.pca(andata, n_comps=30,random_state=1337, use_highly_variable=False)
 
+
 rsc.pp.neighbors(andata, n_pcs=15, use_rep='X_pca', n_neighbors=30)
 rsc.tl.leiden(andata, random_state=1337, resolution=0.5, key_added='cluster') 
 
-#rsc.tl.rank_genes_groups_logreg(andata, groupby="cluster",groups='all')
 
-# andata = sc.read_h5ad(os.path.join(pathout, "andata_save.h5ad"))
-# # data is looged
-rsc.tl.rank_genes_groups_logreg(andata, groupby="cluster", use_raw=False)
-# sc.tl.rank_genes_groups(andata, groupby="cluster", method="logreg")
-rsc.get.anndata_to_CPU(andata)
-sc.pl.rank_genes_groups_dotplot(andata, groupby="cluster",n_genes = 3)
+####################################################################################################
+################################## write to andata #################################################
+andata_save = andata.copy()
+andata_save.X = andata_save.layers['log']
+del andata_save.uns
+del andata_save.obsm
+del andata_save.varm
+del andata_save.layers
+del andata_save.obsp
+andata_save.write_h5ad(os.path.join(pathout, "andata_save.h5ad"))
+
+####################################################################################################
+################################## read #################################################
+
+andata = sc.read_h5ad(os.path.join(pathout, "andata_save.h5ad"))
