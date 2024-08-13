@@ -16,7 +16,7 @@ from scipy.stats import gaussian_kde
 from scipy.interpolate import griddata
 
 
-def set_image_para(self):
+def set_image_para():
     plt.rcParams['figure.dpi'] = 150
     plt.rcParams['font.family'] = ['serif']
     plt.rcParams['font.size'] = 12
@@ -40,7 +40,7 @@ def plot_dist(andata,column,ax,type = 'obs', bins = 'auto',title = '',xlab = '',
     # Calculate bin width
     bin_width = bin_edges[1] - bin_edges[0]
     set_image_para()
-    sns.histplot(arr, binwidth=bin_width,color=palette1,ax = ax, kde=True)
+    sns.histplot(arr, binwidth=bin_width,palette=palette1,ax = ax, kde=True)
     ax.set_ylabel(ylab)
     ax.set_xlabel(xlab)
     ax.set_title(title)
