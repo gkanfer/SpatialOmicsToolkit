@@ -2,7 +2,7 @@
 
 #SBATCH --job-name="stlearn LR analysis"
 #SBATCH --partition=gpu
-#SBATCH --gres=gpu:a100:4
+#SBATCH --gres=gpu:a100:1
 #SBATCH --time=5:00:00
 #SBATCH --mem=50g
 #SBATCH --cpus-per-task=8

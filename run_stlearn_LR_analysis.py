@@ -67,8 +67,8 @@ print(len(lrs))
 # Running the analysis #
 st.tl.cci.run(grid, lrs,
                 min_spots = 20, #Filter out any LR pairs with no scores for less than min_spots
-                distance=0, # None defaults to spot+immediate neighbours; distance=0 for within-spot mode
-                n_pairs=100, # Number of random pairs to generate; low as example, recommend ~10,000
+                distance=None, # None defaults to spot+immediate neighbours; distance=0 for within-spot mode
+                n_pairs=10_000, # Number of random pairs to generate; low as example, recommend ~10,000
                 n_cpus=None, # Number of CPUs for parallel. If None, detects & use all available.
                 )
 
@@ -78,8 +78,9 @@ grid_save.uns['cluster'].to_csv(os.path.join(pathout, "cluster.csv"))
 grid_save.uns['lrfeatures'].to_csv(os.path.join(pathout, "lrfeatures.csv"))
 
 import pickle
-with open("grid_uns_mtracies.pkl", 'wb') as buff:
+with open(os.path.join(pathout,"grid_uns_mtracies.pkl"), 'wb') as buff:
      pickle.dump({'grid_counts':grid.uns['grid_counts'], 'grid_xedges':grid.uns['grid_xedges'], 'grid_yedges':grid.uns['grid_yedges']}, buff)
 
 del grid_save.uns
 grid_save.write_h5ad(os.path.join(pathout, "grid_save.h5ad"))
+
