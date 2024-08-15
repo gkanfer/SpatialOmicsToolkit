@@ -69,13 +69,7 @@ def plot_spatial_data(andata, column, ax,fig, size = 2, set_xlabel_cbar = '', **
         'y': andata.obsm['spatial'][:, 1],
         'total_counts': andata.obs['total_counts']
     })
-    plt.rcParams['figure.dpi'] = 150
-    plt.rcParams['font.family'] = ['serif']
-    plt.rcParams['font.size'] = 12
-    plt.rcParams['axes.labelsize'] = 12
-    plt.rcParams['axes.titlesize'] = 12
-    plt.rcParams['xtick.labelsize'] = 12
-    plt.rcParams['ytick.labelsize'] = 12
+    
     
     palette = sns.color_palette("Blues", as_cmap=True)
     listed_cmap = ListedColormap(palette(np.linspace(0, 1, 256)))
@@ -95,7 +89,7 @@ def plot_spatial_data(andata, column, ax,fig, size = 2, set_xlabel_cbar = '', **
     
     return sc
 
-def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 2, random_palette = False):
+def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 2,alpha = 0.6, markerscale = 5, cluster_name = 'cluster', random_palette = False):
     palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
     if random_palette:
         random.shuffle(palette) 
@@ -106,28 +100,35 @@ def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 
     if num_classes==1:
         listed_cmap = ListedColormap(palette)
     else:
-        num_classes = len(df['cluster'].unique())
+        num_classes = len(np.unique(df['cluster'].values))
         extended_palette = palette * (num_classes // len(palette) + 1)
         extended_palette = extended_palette[:num_classes]
         listed_cmap = ListedColormap(extended_palette)
         
     custom_params = custom_paramsForSPatialPlot()
     sns.set_theme(style="whitegrid", palette="pastel", rc=custom_params)
-    for i, cluster in enumerate(df['cluster'].unique()):
+    color_container = []
+    
+    clusters = sorted(np.unique(df['cluster'].values), key=int)
+    for i, cluster in enumerate(clusters):
         cluster_data = df[df['cluster'] == cluster]
-        ax.scatter( x=cluster_data['x'], y=cluster_data['y'], color=listed_cmap(i), label=f'{cluster}', s=1, alpha=0.6)
+        ax.scatter( x=cluster_data['x'], y=cluster_data['y'], color=listed_cmap(i), label=f'{cluster}', s=size, alpha=alpha)
+        color_container.append(listed_cmap(i))
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_xlabel('')
-    ax.set_ylabel('')
-    legend = ax.legend( title="Cluster",
+    ax.set_xlabel(xlab)
+    ax.set_ylabel(ylab)
+    ax.set_title(title)
+    legend = ax.legend( title=cluster_name,
                         bbox_to_anchor=(1.05, 1),  # Position the legend outside the plot
                         loc='upper left',
                         fontsize='small',  # Control the font size
                         title_fontsize='medium',
-                        markerscale=5,  # Increase the size of the legend markers
+                        markerscale=markerscale,  # Increase the size of the legend markers
                         frameon=False# Control the title font size
                         )
+    df_color = pd.DataFrame({"clusters":df['cluster'].unique(),"colors":color_container})
+    return df_color
     
 def plot_expression(df,marker,ax,**kwargs):
     custom_params = {"axes.spines.right": False, "axes.spines.top": False}
