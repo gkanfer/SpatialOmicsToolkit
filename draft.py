@@ -16,43 +16,41 @@ import pandas as pd
 import voyagerpy as vp
 import geopandas as gpd
 from collections import OrderedDict
-import pickle
-
 path_016 = "/data/kanferg/Sptial_Omics/playGround/Data/Visium_HD_Human_Colon_Cancer_binned_outputs/binned_outputs/square_016um"
 pathout = "/data/kanferg/Sptial_Omics/SpatialOmicsToolkit/out_2"
-grid = sc.read_h5ad(os.path.join(pathout, "grid_save_colon.h5ad"))
-file_path = os.path.join(pathout, "grid_uns_mtracies_colon.pkl")
+andata = sc.read_h5ad(os.path.join(pathout, "andata_save_colon.h5ad"))
+andata.uns['config'] = OrderedDict()
+andata.uns['config'] = OrderedDict()
+andata.uns["config"]["secondary_var_names"] = andata.var_names
+import os
+import pickle
+
+file_path = os.path.join(pathout, "andata_uns_mtracies__colon.pkl")
+
 if os.path.getsize(file_path) > 0:
     with open(file_path, 'rb') as buff:
-        grid_uns_mtracies = pickle.load(buff)
+        andata_uns_mtracies = pickle.load(buff)
 else:
     print("File is empty. Cannot load data.")
-    grid_uns_mtracies = None
-grid.uns = {}
-grid.uns['cluster'] = pd.read_csv(os.path.join(pathout, "cluster.csv"))
-grid.uns['grid_counts'] = grid_uns_mtracies['grid_counts']
-grid.uns['grid_xedges'] = grid_uns_mtracies['grid_xedges']
-grid.uns['grid_yedges'] = grid_uns_mtracies['grid_yedges']
-grid.uns['lrfeatures'] = pd.read_csv(os.path.join(pathout, "lrfeatures.csv"))
-grid.uns['lr_summary'] = pd.read_csv(os.path.join(pathout, "lr_summary.csv"))
-#grid.X = grid.layers['count']
-sparse_matrix = grid.X
-row_sums = sparse_matrix.sum(axis=1)
-grid.obs['n_counts'] = np.array(row_sums).flatten()
-grid.layers['counts'] = grid.X.copy()
-sc.pp.normalize_total(grid)
-sc.pp.log1p(grid)
-grid.layers['log'] = grid.X.copy()
-sc.pp.scale(grid, max_value=10)
-
+    andata_uns_mtracies = None
+andata.uns["spatial"] = andata.obsm["spatial"]
+andata.uns['clusterColorMap'] = andata_uns_mtracies['clusterColorMap']
 scale = 1
-visium_spots = gpd.GeoSeries.from_xy(grid.obsm['spatial'][:,0], grid.obsm['spatial'][:,1]).scale(scale, scale, origin=(0, 0))
-_ = vp.spatial.set_geometry(grid, geom="spot_poly", values=visium_spots)
-grid.uns['config'] = OrderedDict()
-grid.uns["config"]["secondary_var_names"] = grid.var_names
-sc.pp.pca(grid, n_comps=15)
+visium_spots = gpd.GeoSeries.from_xy(andata.obsm['spatial'][:,0], andata.obsm['spatial'][:,1]).scale(scale, scale, origin=(0, 0))
+_ = vp.spatial.set_geometry(andata, geom="spot_poly", values=visium_spots)
+from scipy.sparse import csr_matrix
+andata_sub = andata.copy()
+andata_sub.X = csr_matrix(andata_sub.X)
+andata_sub = sc.pp.subsample(andata_sub, n_obs=40_000,copy=True)
+andata_sub.obs.index = np.arange(len(andata_sub.obs.index))
+andata_sub.obs_names = andata_sub.obs_names.astype(str)
+andata_sub.uns['spatial']  = andata_sub.obsm['spatial']
+scale = 1
+visium_spots = gpd.GeoSeries.from_xy(andata_sub.obsm['spatial'][:,0], andata_sub.obsm['spatial'][:,1]).scale(scale, scale, origin=(0, 0))
+_ = vp.spatial.set_geometry(andata_sub, geom="spot_poly", values=visium_spots)
+sc.pp.pca(andata_sub, n_comps=15)
 sc.pp.neighbors(
-    grid,
+    andata_sub,
     n_neighbors=25,
     n_pcs=15,
     use_rep='X_pca',
@@ -62,7 +60,8 @@ sc.pp.neighbors(
     metric='cosine', # many metrics available,
     key_added='knn'
 )
-dist = grid.obsp['knn_distances'].copy()
+dist = andata_sub.obsp['knn_distances'].copy()
+#dist.data[dist.data == 0] = 0.000001
 dist.data = 1 / dist.data
 
 # row normalize the matrix, this makes the matrix dense.
@@ -70,13 +69,12 @@ dist /= dist.sum(axis=1)
 
 # convert dist back to sparse matrix
 from scipy.sparse import csr_matrix
-grid.obsp["knn_weights"] = csr_matrix(dist)
+andata_sub.obsp["knn_weights"] = csr_matrix(dist)
 
 del dist
 
 knn_graph = "knn_weights"
 
 # adata.obsp["knn_connectivities"] represent the edges, while adata.opsp["knn_weights"] represent the weights
-grid.obsp["knn_connectivities"] = (grid.obsp[knn_graph] > 0).astype(int)
-vp.spatial.set_default_graph(grid, knn_graph)
-vp.spatial.to_spatial_weights(grid, graph_name=knn_graph)
+andata_sub.obsp["knn_connectivities"] = (andata_sub.obsp[knn_graph] > 0).astype(int)
+vp.spatial.set_default_graph(andata_sub, knn_graph)
