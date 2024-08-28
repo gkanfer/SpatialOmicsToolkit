@@ -90,4 +90,46 @@ with PdfPages(os.path.join(pathout, 'barcode_hist_aoutocorlation.pdf')) as pdf:
     bins=10)
     plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
     pdf.savefig()
-    plt.close()   
+    plt.close()
+    
+hvg = andata_sub.var[andata_sub.var['highly_variable'].values].index
+andata_sub.X = csr_matrix(andata_sub.X)
+vp.spatial.moran(andata_sub, feature=hvg, dim='var', graph_name=knn_graph)
+hvgs_moransI = andata_sub.uns['spatial']['moran'][knn_graph].loc[hvg, 'I']
+andata_sub.var.loc[:, ["moran"]] = np.nan_to_num(andata_sub.var.loc[:, ["moran"]],0.0)
+
+mat_names = np.ravel(pd.DataFrame(andata_sub.uns['rank_genes_groups']['names']).values)
+cluster_num = len(np.unique(andata_sub.obs['cluster'].values))
+marker_genes = mat_names[:cluster_num].tolist()
+andata_sub.var['symbol'] = andata_sub.var['gene_ids'].values
+
+with PdfPages(os.path.join(pathout, 'plot_moran_features_histogram.pdf')) as pdf:
+    _ = vp.plt.plot_features_histogram(
+            andata_sub,
+            "moran",
+            bins=50,
+            log=False,
+            histtype="bar",
+            markers=marker_genes,
+            show_symbol=False)
+    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
+    pdf.savefig()
+    plt.close()
+    
+_ = vp.spatial.local_moran(andata_sub, marker_genes, graph_name=knn_graph)
+
+with PdfPages(os.path.join(pathout, 'local_moran.pdf')) as pdf:
+    _ = vp.plt.plot_barcode_histogram(
+        andata_sub,
+        marker_genes,
+        color_by='cluster',
+        obsm='local_moran',
+        histtype='line',
+        figsize=(20,20),
+        subplot_kwargs=dict(layout='constrained'),
+        label=marker_genes,
+        ncol=2
+    )
+    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
+    pdf.savefig()
+    plt.close()

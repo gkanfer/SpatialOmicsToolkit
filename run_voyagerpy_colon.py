@@ -26,7 +26,7 @@ andata.uns["config"]["secondary_var_names"] = andata.var_names
 from scipy.sparse import csr_matrix
 andata_sub = andata.copy()
 andata_sub.X = csr_matrix(andata_sub.X)
-andata_sub = sc.pp.subsample(andata_sub, n_obs=100_000,copy=True)
+andata_sub = sc.pp.subsample(andata_sub, n_obs=10_000,copy=True)
 scale = 1
 visium_spots = gpd.GeoSeries.from_xy(andata_sub.obsm['spatial'][:,0], andata_sub.obsm['spatial'][:,1]).scale(scale, scale, origin=(0, 0))
 _ = vp.spatial.set_geometry(andata_sub, geom="spot_poly", values=visium_spots)
@@ -35,16 +35,16 @@ andata_sub.X = andata_sub.layers['log']
 sc.pp.scale(andata_sub, max_value=10)
 sc.pp.pca(andata_sub, n_comps=15)
 sc.pp.neighbors(
-        andata_sub,
-        n_neighbors=25,
-        n_pcs=15,
-        use_rep='X_pca',
-        knn=True,
-        random_state=29403943,
-        method='umap', # one of umap, gauss, rapids
-        metric='cosine', # many metrics available,
-        key_added='knn'
-    )
+    andata_sub,
+    n_neighbors=25,
+    n_pcs=15,
+    use_rep='X_pca',
+    knn=True,
+    random_state=29403943,
+    method='umap', # one of umap, gauss, rapids
+    metric='cosine', # many metrics available,
+    key_added='knn'
+)
 dist = andata_sub.obsp['knn_distances'].copy()
 #dist.data[dist.data == 0] = 0.000001
 dist.data = 1 / dist.data
@@ -64,10 +64,11 @@ knn_graph = "knn_weights"
 andata_sub.obsp["knn_connectivities"] = (andata_sub.obsp[knn_graph] > 0).astype(int)
 vp.spatial.set_default_graph(andata_sub, "knn_weights")
 vp.spatial.to_spatial_weights(andata_sub, graph_name=knn_graph)
-
 qc_features = ["total_counts"]
+
 morans = vp.spatial.moran(andata_sub, qc_features, graph_name=knn_graph)
 andata_sub.uns['spatial']['moran'][knn_graph].loc[qc_features, ["I"]]
+
 qc_features = ["total_counts"]
 vp.spatial.compute_spatial_lag(
     andata_sub,
