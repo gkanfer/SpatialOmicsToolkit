@@ -96,7 +96,8 @@ hvg = andata_sub.var[andata_sub.var['highly_variable'].values].index
 andata_sub.X = csr_matrix(andata_sub.X)
 vp.spatial.moran(andata_sub, feature=hvg, dim='var', graph_name=knn_graph)
 hvgs_moransI = andata_sub.uns['spatial']['moran'][knn_graph].loc[hvg, 'I']
-andata_sub.var.loc[:, ["moran"]] = np.nan_to_num(andata_sub.var.loc[:, ["moran"]],0.0)
+if andata_sub.var.loc[:, ["moran"]].isna().any(axis=0).any():
+    andata_sub.var.loc[:, ["moran"]] = np.nan_to_num(andata_sub.var.loc[:, ["moran"]],0.0)
 
 mat_names = np.ravel(pd.DataFrame(andata_sub.uns['rank_genes_groups']['names']).values)
 cluster_num = len(np.unique(andata_sub.obs['cluster'].values))
