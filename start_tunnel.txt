@@ -1,0 +1,13 @@
+sinteractive --gres=gpu:1,lscratch:10 --constraint="gpuv100|gpuv100x|gpua100" -c 20 --mem=59g -T
+
+
+ssh  -L 46679:localhost:46679 kanferg@biowulf.nih.gov
+
+cn4468
+source myconda
+mamba activate squidpy-voyagerpy
+jupyter notebook --ip localhost --port $PORT1 --no-browser
+
+
+module load rapids-singlecell 
+jupyter-rsc lab --ip localhost --port $PORT1 --no-browser 
