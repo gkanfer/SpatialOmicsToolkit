@@ -15,85 +15,38 @@ import random
 import pandas as pd
 import voyagerpy as vp
 import geopandas as gpd
+import libpysal as lps
 from collections import OrderedDict
-
-path_016 = "/data/kanferg/Sptial_Omics/playGround/Data/Visium_HD_Human_Colon_Cancer_binned_outputs/binned_outputs/square_016um"
-pathout = "/data/kanferg/Sptial_Omics/SpatialOmicsToolkit/out_2"
-andata = sc.read_h5ad(os.path.join(pathout, "andata_save_colon.h5ad"))
-andata.uns['config'] = OrderedDict()
-andata.uns['config'] = OrderedDict()
-andata.uns["config"]["secondary_var_names"] = andata.var_names
+import scipy.sparse as sp
 from scipy.sparse import csr_matrix
-andata_sub = andata.copy()
-andata_sub.X = csr_matrix(andata_sub.X)
-andata_sub = sc.pp.subsample(andata_sub, n_obs=10_000,copy=True)
-scale = 1
-visium_spots = gpd.GeoSeries.from_xy(andata_sub.obsm['spatial'][:,0], andata_sub.obsm['spatial'][:,1]).scale(scale, scale, origin=(0, 0))
-_ = vp.spatial.set_geometry(andata_sub, geom="spot_poly", values=visium_spots)
+def run(sample_size):
+    path_016 = "/data/kanferg/Sptial_Omics/playGround/Data/Visium_HD_Human_Colon_Cancer_binned_outputs/binned_outputs/square_016um"
+    pathout = "/data/kanferg/Sptial_Omics/SpatialOmicsToolkit/out_2"
+    andata = sc.read_h5ad(os.path.join(pathout, "andata_save_colon.h5ad"))
+    andata.uns['config'] = OrderedDict()
+    andata.uns['config'] = OrderedDict()
+    andata.uns["config"]["secondary_var_names"] = andata.var_names
 
-andata_sub.X = andata_sub.layers['log']
-sc.pp.scale(andata_sub, max_value=10)
-sc.pp.pca(andata_sub, n_comps=15)
-sc.pp.neighbors(
-    andata_sub,
-    n_neighbors=25,
-    n_pcs=15,
-    use_rep='X_pca',
-    knn=True,
-    random_state=29403943,
-    method='umap', # one of umap, gauss, rapids
-    metric='cosine', # many metrics available,
-    key_added='knn'
-)
-dist = andata_sub.obsp['knn_distances'].copy()
-#dist.data[dist.data == 0] = 0.000001
-dist.data = 1 / dist.data
+    import os
+    import pickle
 
-# row normalize the matrix, this makes the matrix dense.
-dist /= dist.sum(axis=1)
+    file_path = os.path.join(pathout, "andata_uns_mtracies__colon.pkl")
 
-# convert dist back to sparse matrix
-from scipy.sparse import csr_matrix
-andata_sub.obsp["knn_weights"] = csr_matrix(dist)
+    if os.path.getsize(file_path) > 0:
+        with open(file_path, 'rb') as buff:
+            andata_uns_mtracies = pickle.load(buff)
+    else:
+        print("File is empty. Cannot load data.")
+        andata_uns_mtracies = None
+    
+    andata_sub = andata.copy()
+    andata_sub.X = csr_matrix(andata_sub.X)
+    andata_sub = sc.pp.subsample(andata_sub, n_obs=sample_size,copy=True) 
+    
+    sparse_dist_matrix = andata_sub.obsp['distances'].tocsr()
+    sparse_inv_matrix = sparse_dist_matrix.copy()
+    sparse_inv_matrix.data = 1 / sparse_inv_matrix.data
+    sparse_inv_matrix.data[sparse_inv_matrix.data == float('inf')] = 0
+    
 
-del dist
-
-knn_graph = "knn_weights"
-
-# adata.obsp["knn_connectivities"] represent the edges, while adata.opsp["knn_weights"] represent the weights
-andata_sub.obsp["knn_connectivities"] = (andata_sub.obsp[knn_graph] > 0).astype(int)
-vp.spatial.set_default_graph(andata_sub, "knn_weights")
-vp.spatial.to_spatial_weights(andata_sub, graph_name=knn_graph)
-qc_features = ["total_counts"]
-
-morans = vp.spatial.moran(andata_sub, qc_features, graph_name=knn_graph)
-andata_sub.uns['spatial']['moran'][knn_graph].loc[qc_features, ["I"]]
-
-qc_features = ["total_counts"]
-vp.spatial.compute_spatial_lag(
-    andata_sub,
-    qc_features,
-    graph_name=knn_graph,
-    inplace=True
-)
-
-with PdfPages(os.path.join(pathout, 'spatial_lag_plot_aoutocorlation.pdf')) as pdf:
-    ax = vp.plt.moran_plot(andata_sub, feature="total_counts", color_by='cluster', alpha=0.8,s = 1)
-    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
-    pdf.savefig()
-    plt.close()   
-
-
-_ = vp.spatial.local_moran(andata_sub, qc_features, graph_name=knn_graph)
-with PdfPages(os.path.join(pathout, 'barcode_hist_aoutocorlation.pdf')) as pdf:
-    axs = vp.plt.plot_barcode_histogram(
-            andata_sub,
-            qc_features,
-            obsm="local_moran",
-            color_by='cluster',
-            log=True,
-            histtype='line',
-            bins=10)
-    plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.2)
-    pdf.savefig()
-    plt.close()   
+sample_size = [5000,10_000,20_000,50_000,60_000]

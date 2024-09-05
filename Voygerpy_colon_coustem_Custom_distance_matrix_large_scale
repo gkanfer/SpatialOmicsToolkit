@@ -1,0 +1,311 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "99ea5a55-d60c-49bc-9cf7-8de58d79589e",
+   "metadata": {},
+   "source": [
+    "# Spatial Analysis of Human Colon Visium Sample\n",
+    "\n",
+    "In this notebook, we analyze the human colon Visium sample from the 10x dataset. The KNN distance matrix is adjusted for compatibility with the PySAL library to perform spatial analysis."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "9d3364a7-bdd0-48be-be10-c60a963981e8",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import cupy as cp\n",
+    "import cupyx\n",
+    "import scanpy as sc\n",
+    "import scanpy as sc\n",
+    "import numpy as np\n",
+    "from cupyx.scipy.sparse import csr_matrix\n",
+    "import os\n",
+    "from PIL import Image\n",
+    "import matplotlib.pyplot as plt\n",
+    "from matplotlib.colors import ListedColormap\n",
+    "from matplotlib.colors import LinearSegmentedColormap\n",
+    "from matplotlib.backends.backend_pdf import PdfPages\n",
+    "import seaborn as sns\n",
+    "import random\n",
+    "import pandas as pd\n",
+    "import voyagerpy as vp\n",
+    "import geopandas as gpd\n",
+    "import libpysal as lps\n",
+    "from collections import OrderedDict"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "d40857be-08d7-4e7c-8566-96595ce242c1",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "path_016 = \"/data/kanferg/Sptial_Omics/playGround/Data/Visium_HD_Human_Colon_Cancer_binned_outputs/binned_outputs/square_016um\"\n",
+    "pathout = \"/data/kanferg/Sptial_Omics/SpatialOmicsToolkit/out_2\"\n",
+    "andata = sc.read_h5ad(os.path.join(pathout, \"andata_save_colon.h5ad\"))\n",
+    "andata.uns['config'] = OrderedDict()\n",
+    "andata.uns['config'] = OrderedDict()\n",
+    "andata.uns[\"config\"][\"secondary_var_names\"] = andata.var_names\n",
+    "def load_matrix(andata,pathout,npz_file = \"obsp_distances.npz\",mode = 'sparse', mat_name = 'distances'):\n",
+    "    npzfile = cp.load(os.path.join(pathout, npz_file))\n",
+    "    data = cp.array(npzfile['data'])\n",
+    "    indices = cp.array(npzfile['indices'])\n",
+    "    indptr = cp.array(npzfile['indptr'])\n",
+    "    shape = tuple(npzfile['shape'])\n",
+    "    \n",
+    "    # Reconstruct the sparse matrix\n",
+    "    sparse_matrix_distances = csr_matrix((data, indices, indptr), shape=shape)\n",
+    "    if mode== 'sparse':\n",
+    "        andata.obsp[mat_name] = sparse_matrix_distances\n",
+    "    else:\n",
+    "        andata.obsp[mat_name] = sparse_matrix_distances.get()\n",
+    "    return andata\n",
+    "andata = load_matrix(andata,pathout,npz_file = \"obsp_distances_large_colon.npz\",mode = 'sparse', mat_name = 'distances')\n",
+    "andata = load_matrix(andata,pathout,npz_file = \"obsp_connectivities_large_colon.npz\",mode = 'sparse', mat_name = 'connectivities')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "33f841d8-d24c-4f31-b56a-804b616c2244",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "AnnData object with n_obs × n_vars = 133282 × 1500\n",
+       "    obs: 'n_genes_by_counts', 'total_counts', 'log1p_n_genes_by_counts', 'log1p_total_counts', 'total_counts_MT', 'pct_counts_MT', 'log1p_total_counts_MT', 'cluster'\n",
+       "    var: 'gene_ids', 'feature_types', 'genome', 'MT', 'n_cells_by_counts', 'total_counts', 'mean_counts', 'pct_dropout_by_counts', 'log1p_total_counts', 'log1p_mean_counts', 'highly_variable', 'highly_variable_rank', 'means', 'variances', 'variances_norm', 'mean', 'std'\n",
+       "    uns: 'config'\n",
+       "    obsm: 'X_pca', 'spatial'\n",
+       "    layers: 'counts', 'log'\n",
+       "    obsp: 'distances', 'connectivities'"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "andata"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "418622af-ae33-4210-a5ef-aab80f397a54",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "andata.obsp['distances']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "af10eca0-17de-47c5-af77-2b2bcb64d444",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "andata.obsp['distances'].tocsr()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "7f1c30b2-9e38-4ff7-b44a-97cdecac5ef2",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import scipy.sparse as sp\n",
+    "sparse_dist_matrix = andata.obsp['distances'].tocsr()\n",
+    "sparse_inv_matrix = sparse_dist_matrix.copy()\n",
+    "sparse_inv_matrix.data = 1 / sparse_inv_matrix.data\n",
+    "sparse_inv_matrix.data[sparse_inv_matrix.data == float('inf')] = 0"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9a6322a1-d8c0-4d62-93c9-0ad48a964ef9",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "andata.obs_names[andata.obs_names=='s_016um_00301_00019-1']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b9623d78-3893-422b-ab95-d1314d171fc9",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "\n",
+    "# Convert the sparse matrix to COOrdinate format\n",
+    "sparse_inv_matrix_coo = sparse_inv_matrix.tocoo()\n",
+    "\n",
+    "# Extract the row (focal) and column (neighbor) indices of non-zero entries\n",
+    "focal = sparse_inv_matrix_coo.row\n",
+    "neighbors = sparse_inv_matrix_coo.col\n",
+    "\n",
+    "focal = focal.get()\n",
+    "neighbors = neighbors.get() \n",
+    "\n",
+    "idx = np.array(andata.obs_names,dtype=str) # Assuming this is a pandas Index or a list-like structure\n",
+    "\n",
+    "# Convert sparse matrix values to a 1D array explicitly\n",
+    "weights = sparse_inv_matrix_coo.data\n",
+    "weights = weights.get()\n",
+    "\n",
+    "\n",
+    "\n",
+    "# Create a DataFrame with focal, neighbor, and weight information\n",
+    "graph_df = pd.DataFrame({\n",
+    "    \"focal\": idx[focal],\n",
+    "    \"neighbor\": idx[neighbors],\n",
+    "    \"weight\": weights  # The actual non-zero values (inverted distances)\n",
+    "})\n",
+    "\n",
+    "# Display the DataFrame to check\n",
+    "graph_df.head()\n",
+    "\n",
+    "graph_df_filtered = graph_df[graph_df['weight'] != 0]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "ab3d6376-8182-4491-a121-a9072bd6383e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "W = lps.weights.W.from_adjlist(graph_df_filtered)\n",
+    "W.set_transform(\"r\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "40649ca0-2213-4663-9fd9-9eebbb819431",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "graph_df_filtered.loc[graph_df_filtered['focal']=='s_016um_00301_00019-1']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "991c3f51-6876-4d21-b645-cec6dbe029af",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "andata.uns.setdefault(\"spatial\", {})\n",
+    "andata.uns[\"spatial\"][\"knn_weights\"] = W"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "bce6aff2-5bfe-4816-a5be-8bbce7c47863",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "grouper = graph_df_filtered.groupby(\"focal\")\n",
+    "grouper"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "984003ac-cc12-4f8b-8f20-fd8465ffb429",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "graph_df_filtered.groupby(\"focal\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "154d8fce-bea8-42e0-a2b5-5a58226f4888",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "focal_col=\"focal\"\n",
+    "neighbor_col=\"neighbor\"\n",
+    "grouper = graph_df_filtered.groupby(\"focal\")\n",
+    "weight_col = \"weight\"\n",
+    "neighbors = dict()\n",
+    "weights = dict()\n",
+    "for ix, chunk in grouper:\n",
+    "    if ix == 's_016um_00301_00019-1':\n",
+    "        quit()\n",
+    "    else:\n",
+    "        neighbors_to_ix = chunk[neighbor_col].values\n",
+    "        weights_to_ix = chunk[weight_col].values\n",
+    "        mask = neighbors_to_ix != ix\n",
+    "        neighbors[ix] = neighbors_to_ix[mask].tolist()\n",
+    "        weights[ix] = weights_to_ix[mask].tolist()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "a9d23a60-afe6-4ccb-ad4c-9c5caf9c27e4",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "weights"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "25590790-68cd-44e3-9b37-c6e13c5cf15f",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "neighbors['s_016um_00301_00019-1']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "b39c7bea-0d80-4097-8e83-947f6b02dfff",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.19"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
