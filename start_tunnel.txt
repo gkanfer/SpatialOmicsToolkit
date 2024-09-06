@@ -10,4 +10,8 @@ jupyter notebook --ip localhost --port $PORT1 --no-browser
 
 
 module load rapids-singlecell 
-jupyter-rsc lab --ip localhost --port $PORT1 --no-browser 
+jupyter-rsc lab --ip localhost --port $PORT1 --no-browser
+
+source myconda 
+mamba activate stlearn-env  
+jupyter notebook --ip localhost --port $PORT1 --no-browser

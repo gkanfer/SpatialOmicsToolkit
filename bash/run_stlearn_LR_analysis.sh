@@ -11,4 +11,4 @@
 source myconda
 mamba activate stlearn-env
 
-/gpfs/gsfs10/users/kanferg/conda/envs/stlearn-env/bin/python run_stlearn_LR_analysis.py
+/gpfs/gsfs10/users/kanferg/conda/envs/stlearn-env/bin/python run_stlearn_LR_analysis_visium.py
