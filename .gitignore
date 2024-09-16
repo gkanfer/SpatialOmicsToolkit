@@ -15,4 +15,5 @@ token.txt
 *.pkl
 *.out
 *.pyc
+*.rnk
 token.txt
