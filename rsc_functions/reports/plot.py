@@ -89,10 +89,8 @@ def plot_spatial_data(andata, column, ax,fig, size = 2, set_xlabel_cbar = '', **
     
     return sc
 
-def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 2,alpha = 0.6, markerscale = 5, cluster_name = 'cluster', random_palette = False):
+def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 2,alpha = 0.6, markerscale = 5, cluster_name = 'cluster'):
     palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
-    if random_palette:
-        random.shuffle(palette) 
     df = pd.DataFrame({'cluster':andata.obs['cluster'],'x':andata.obsm['spatial'][:,0],'y':andata.obsm['spatial'][:,1]})
     if features:
         df[df['cluster'].isin([features])]
@@ -104,9 +102,6 @@ def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 
         extended_palette = palette * (num_classes // len(palette) + 1)
         extended_palette = extended_palette[:num_classes]
         listed_cmap = ListedColormap(extended_palette)
-        
-    custom_params = custom_paramsForSPatialPlot()
-    sns.set_theme(style="whitegrid", palette="pastel", rc=custom_params)
     color_container = []
     
     clusters = sorted(np.unique(df['cluster'].values), key=int)
