@@ -62,6 +62,22 @@
 //     ]
 // }
 
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "name": "Python: Current File",
+//             "type": "debugpy",
+//             "request": "launch",
+//             "program": "${workspaceFolder}/draft.py",
+//             "console": "integratedTerminal",
+//             "cwd": "${workspaceFolder}", 
+//             "python": "/data/kanferg/conda/envs/spatialleiden-cupy/bin/python3",
+//             "justMyCode": false,
+//         }
+//     ]
+// }
+
 {
     "version": "0.2.0",
     "configurations": [
@@ -72,7 +88,7 @@
             "program": "${workspaceFolder}/draft.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}", 
-            "python": "/data/kanferg/conda/envs/spatialleiden-cupy/bin/python3",
+            "python": "/usr/local/apps/scvitools/1.2.0.gpu/bin/python-scvitools",
             "justMyCode": false,
         }
     ]
