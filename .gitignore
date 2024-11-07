@@ -3,6 +3,8 @@ Data/
 out/
 out_1/
 out_2/
+out_3/
+out_4/
 cpdb_out/
 R_simulation/
 adata_034_c1d1.csv
@@ -16,4 +18,5 @@ token.txt
 *.out
 *.pyc
 *.rnk
+*.npz
 token.txt
