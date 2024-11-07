@@ -89,9 +89,9 @@ def plot_spatial_data(andata, column, ax,fig, size = 2, set_xlabel_cbar = '', **
     
     return sc
 
-def plot_spatial(andata,ax,features = None,title = '',xlab = '',ylab ='',size = 2,alpha = 0.6, markerscale = 5, cluster_name = 'cluster'):
+def plot_spatial(andata,ax, cluster = 'cluster', features = None,title = '',xlab = '',ylab ='',size = 2,alpha = 0.6, markerscale = 5, cluster_name = 'cluster'):
     palette = sns.color_palette("tab20") + sns.color_palette("tab20b") + sns.color_palette("tab20c")
-    df = pd.DataFrame({'cluster':andata.obs['cluster'],'x':andata.obsm['spatial'][:,0],'y':andata.obsm['spatial'][:,1]})
+    df = pd.DataFrame({'cluster':andata.obs[cluster],'x':andata.obsm['spatial'][:,0],'y':andata.obsm['spatial'][:,1]})
     if features:
         df[df['cluster'].isin([features])]
     num_classes = len(df['cluster'].unique())
