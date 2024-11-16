@@ -51,7 +51,7 @@ results = tuner.fit(
     metric="validation_loss",
     resources={'gpu': 3},  # specify GPU resources
     search_space=search_space,
-    num_samples=100,
+    num_samples=10,
     max_epochs=3
     )
 ray.shutdown()

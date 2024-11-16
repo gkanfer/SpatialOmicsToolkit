@@ -2,9 +2,9 @@
 
 #SBATCH --job-name="scvi_env analysis"
 #SBATCH --partition=gpu
-#SBATCH --gres=gpu:a100:2
+#SBATCH --gres=gpu:a100:3
 #SBATCH --time=16:00:00
-#SBATCH --mem=50g
+#SBATCH --mem=6g
 #SBATCH --cpus-per-task=20
 #SBATCH --mail-type=ALL
 
