@@ -6,14 +6,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import scvi
 import torch
-import celltypist
-from celltypist import models
 from scvi.autotune import ModelTuner
 from ray import tune
 import ray
 
-# import warnings
-# warnings.filterwarnings("ignore", category=DeprecationWarning)
 torch.set_float32_matmul_precision("high")
 
 print("CUDA available:", torch.cuda.is_available())
