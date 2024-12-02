@@ -95,6 +95,38 @@
 // }
 
 
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "name": "Python: Current File",
+//             "type": "debugpy",
+//             "request": "launch",
+//             "program": "${workspaceFolder}/draft.py",
+//             "console": "integratedTerminal",
+//             "cwd": "${workspaceFolder}", 
+//             "python": "/data/kanferg/conda/envs/STAligner_env/bin/python3",
+//             "justMyCode": false,
+//         }
+//     ]
+// }
+
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "name": "Python: Current File",
+//             "type": "debugpy",
+//             "request": "launch",
+//             "program": "${workspaceFolder}/draft.py",
+//             "console": "integratedTerminal",
+//             "cwd": "${workspaceFolder}", 
+//             "python": "/data/kanferg/conda/envs/scvi_env/bin/python3",
+//             "justMyCode": false,
+//         }
+//     ]
+// }
+
 {
     "version": "0.2.0",
     "configurations": [
@@ -105,7 +137,7 @@
             "program": "${workspaceFolder}/draft.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}", 
-            "python": "/data/kanferg/conda/envs/STAligner_env/bin/python3",
+            "python": "/data/kanferg/conda/envs/spatialdata_env/bin/python3",
             "justMyCode": false,
         }
     ]
